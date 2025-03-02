@@ -193,7 +193,7 @@ def main():
     # Sidebar: About, How to Use, Conversation History, Knowledge Base
     with st.sidebar:
         st.header("About")
-        st.image("photo2.jpg", width=150)
+        #st.image("photo2.jpg", width=150)
         st.markdown("""
 **Nandesh Kalashetti**  
 *GenAi Developer*  
