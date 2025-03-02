@@ -24,8 +24,10 @@ from langchain_groq import ChatGroq
 # 3. CONFIGURATION
 GROQ_API_KEY = "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"  # Replace if needed
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+
+# IMPORTANT: Use the same folder name you have in your repo
 CHROMA_SETTINGS = {
-    "persist_directory": "resume_db",
+    "persist_directory": "chroma_db_4",  # Make sure this folder exists
     "collection_name": "resume_collection"
 }
 
@@ -47,9 +49,13 @@ This can be any document (.csv, .txt, .pdf, .docx, .md) that contains informatio
 Feel free to ask anything! 😊
 """
 
+# 4. ASYNC SETUP
 nest_asyncio.apply()
 
+# 5. CORE FUNCTIONS
+
 def initialize_vector_store():
+    """Initialize Chroma vector store in 'chroma_db_4' with a huggingface embedding."""
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
     return Chroma(
         persist_directory=CHROMA_SETTINGS["persist_directory"],
@@ -58,6 +64,7 @@ def initialize_vector_store():
     )
 
 def process_document(file):
+    """Process a document (PDF, CSV, TXT, DOCX, MD) and return its text."""
     ext = os.path.splitext(file.name)[1].lower()
     try:
         if ext == ".pdf":
@@ -83,6 +90,7 @@ def chunk_text(text):
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     return splitter.split_text(text)
 
+# 6. STREAMLIT UI
 def main():
     st.set_page_config(
         page_title="Nandesh's AI Resume Assistant", 
@@ -90,7 +98,7 @@ def main():
         layout="wide"
     )
     
-    # --- UPDATED CSS BLOCK ---
+    # Modern CSS block
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
@@ -145,7 +153,7 @@ def main():
     .chat-box:hover {
         transform: scale(1.01);
     }
-    /* User question: gradient color with an emoji flair */
+    /* User question gradient color */
     .user-message {
         font-weight: bold;
         margin-bottom: 10px;
@@ -154,14 +162,14 @@ def main():
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
-    /* Force black, bold text for AI responses */
+    /* AI response bold black */
     .bot-message {
         color: #000 !important;
         line-height: 1.6;
         font-size: 1.1em;
         font-weight: bold;
     }
-    /* Selection color override: keep text readable */
+    /* Selection override */
     .chat-box *::selection {
         background: #ffdf8f;
         color: #000 !important;
@@ -197,24 +205,11 @@ def main():
     # Sidebar
     with st.sidebar:
         st.header("About")
-        #st.image("photo2.jpg", width=150)
         st.markdown("""
 **Nandesh Kalashetti**  
 *GenAi Developer*  
 
 [LinkedIn](https://www.linkedin.com/in/nandesh-kalashetti-333a78250/) | [GitHub](https://github.com/Universe7Nandu)
-        """)
-        st.markdown("---")
-        st.header("How to Use This Chatbot")
-        st.markdown("""
-**Step 1:** Upload your document (CSV, TXT, PDF, DOCX, or MD).  
-**Step 2:** Click **Process Document** to extract and index the content.  
-**Step 3:** Ask any question in the chat box!  
-
-- **Simple queries:** Short, fun answers with emojis.  
-- **Complex queries:** Detailed explanations using your document's insights.  
-
-**The more detailed your doc, the richer the answers!** ✨
         """)
         st.markdown("---")
         st.header("Conversation History")
@@ -231,15 +226,19 @@ def main():
             st.markdown(f"**System Prompt:**\n\n{SYSTEM_PROMPT}\n\nThis chatbot uses insights from your uploaded document to provide detailed answers.")
     
     # Main header
-    st.markdown("<header><h1>AI Resume Assistant 🤖</h1></header>", unsafe_allow_html=True)
+    st.markdown("<header><h1>Nandesh's AI Resume Assistant 🤖</h1></header>", unsafe_allow_html=True)
     
-    # Layout
+    # Layout: Two columns
     col_left, col_right = st.columns([1, 2])
     
-    # Document Upload & Processing
+    # Left Column: Document Upload & Processing
     with col_left:
         st.subheader("Knowledge Base Upload & Processing")
-        uploaded_file = st.file_uploader("Upload Document (CSV/TXT/PDF/DOCX/MD)", type=["csv", "txt", "pdf", "docx", "md"], key="knowledge_doc")
+        uploaded_file = st.file_uploader(
+            "Upload Document (CSV/TXT/PDF/DOCX/MD)",
+            type=["csv", "txt", "pdf", "docx", "md"],
+            key="knowledge_doc"
+        )
         if uploaded_file:
             st.session_state.uploaded_document = uploaded_file
             if "document_processed" not in st.session_state:
@@ -259,7 +258,7 @@ def main():
         else:
             st.info("Upload your document to enrich chat responses.")
     
-    # Chat Interface
+    # Right Column: Chat Interface
     with col_right:
         st.subheader("Chat with AI")
         if "chat_history" not in st.session_state:
@@ -268,6 +267,7 @@ def main():
         user_query = st.text_input("Your message:")
         if user_query:
             with st.spinner("Generating response..."):
+                # Construct prompt with or without context
                 if st.session_state.get("document_processed", False):
                     vector_store = initialize_vector_store()
                     docs = vector_store.similarity_search(user_query, k=3)
@@ -275,22 +275,24 @@ def main():
                     prompt = f"{SYSTEM_PROMPT}\nContext: {context}\nQuestion: {user_query}"
                 else:
                     prompt = f"{SYSTEM_PROMPT}\nQuestion: {user_query}"
+                
                 llm = ChatGroq(
                     temperature=0.7,
                     groq_api_key=GROQ_API_KEY,
                     model_name="mixtral-8x7b-32768"
                 )
+                
                 response = asyncio.run(llm.ainvoke([{"role": "user", "content": prompt}]))
                 st.session_state.chat_history.append({
                     "question": user_query,
                     "answer": response.content
                 })
         
-        # Render chat
+        # Display chat
         for chat in st.session_state.chat_history:
             st.markdown(f"""
             <div class="chat-box">
-                <p class="user-message">🙋✨ You: {chat['question']}</p>
+                <p class="user-message">🙋 You: {chat['question']}</p>
                 <p class="bot-message">🤖 AI: {chat['answer']}</p>
             </div>
             """, unsafe_allow_html=True)
