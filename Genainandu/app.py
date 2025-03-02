@@ -275,7 +275,7 @@ def main():
             st.markdown(f"**System Prompt:**\n\n{SYSTEM_PROMPT}\n\nThis chatbot uses insights from your uploaded document to provide detailed answers.")
     
     # Main Header
-    st.markdown("<header><h1>Nandesh's AI Resume Assistant 🤖</h1></header>", unsafe_allow_html=True)
+    st.markdown("<header><h1>Nandesh's AI Assistant 🤖</h1></header>", unsafe_allow_html=True)
     
     # Layout: Two columns (Left: Document Upload & Processing, Right: Chat Interface)
     col_left, col_right = st.columns([1, 2])
