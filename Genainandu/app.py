@@ -29,7 +29,6 @@ CHROMA_SETTINGS = {
     "collection_name": "resume_collection"
 }
 
-# Define the system prompt with your chatbot instructions and profile details.
 SYSTEM_PROMPT = """
 ## **Chatbot Identity**
 👋 Hey there! I'm your personal AI assistant, built by **Nandesh Kalashetti**.
@@ -48,10 +47,8 @@ This can be any document (.csv, .txt, .pdf, .docx, .md) that contains informatio
 Feel free to ask anything! 😊
 """
 
-# 4. ASYNC SETUP
 nest_asyncio.apply()
 
-# 5. CORE FUNCTIONS
 def initialize_vector_store():
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
     return Chroma(
@@ -61,7 +58,6 @@ def initialize_vector_store():
     )
 
 def process_document(file):
-    """Process a document (PDF, CSV, TXT, DOCX, MD) and return its text."""
     ext = os.path.splitext(file.name)[1].lower()
     try:
         if ext == ".pdf":
@@ -87,7 +83,6 @@ def chunk_text(text):
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     return splitter.split_text(text)
 
-# 6. STREAMLIT UI
 def main():
     st.set_page_config(
         page_title="Nandesh's AI Resume Assistant", 
@@ -150,17 +145,26 @@ def main():
     .chat-box:hover {
         transform: scale(1.01);
     }
+    /* User question: gradient color with an emoji flair */
     .user-message {
-        color: #000 !important; /* Force user text to black */
         font-weight: bold;
         margin-bottom: 10px;
         font-size: 1.1em;
+        background: linear-gradient(90deg, #f593e4, #f9d7e9);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
+    /* Force black, bold text for AI responses */
     .bot-message {
-        color: #000 !important; /* Force bot text to black */
+        color: #000 !important;
         line-height: 1.6;
         font-size: 1.1em;
         font-weight: bold;
+    }
+    /* Selection color override: keep text readable */
+    .chat-box *::selection {
+        background: #ffdf8f;
+        color: #000 !important;
     }
     .stButton>button {
         background: linear-gradient(135deg, #ff7e5f, #feb47b);
@@ -190,7 +194,7 @@ def main():
     </style>
     """, unsafe_allow_html=True)
     
-    # Sidebar: About, How to Use, Conversation History, Knowledge Base
+    # Sidebar
     with st.sidebar:
         st.header("About")
         #st.image("photo2.jpg", width=150)
@@ -207,8 +211,8 @@ def main():
 **Step 2:** Click **Process Document** to extract and index the content.  
 **Step 3:** Ask any question in the chat box!  
 
-- **Simple queries:** Receive short, fun answers with emojis.  
-- **Complex queries:** Receive detailed explanations using your document's insights.  
+- **Simple queries:** Short, fun answers with emojis.  
+- **Complex queries:** Detailed explanations using your document's insights.  
 
 **The more detailed your doc, the richer the answers!** ✨
         """)
@@ -229,10 +233,10 @@ def main():
     # Main header
     st.markdown("<header><h1>AI Resume Assistant 🤖</h1></header>", unsafe_allow_html=True)
     
-    # Layout: Two columns (Left: Document Upload & Processing, Right: Chat Interface)
+    # Layout
     col_left, col_right = st.columns([1, 2])
     
-    # Left Column: Document Upload & Processing Section
+    # Document Upload & Processing
     with col_left:
         st.subheader("Knowledge Base Upload & Processing")
         uploaded_file = st.file_uploader("Upload Document (CSV/TXT/PDF/DOCX/MD)", type=["csv", "txt", "pdf", "docx", "md"], key="knowledge_doc")
@@ -255,7 +259,7 @@ def main():
         else:
             st.info("Upload your document to enrich chat responses.")
     
-    # Right Column: Chat Interface Section (Always Available)
+    # Chat Interface
     with col_right:
         st.subheader("Chat with AI")
         if "chat_history" not in st.session_state:
@@ -264,7 +268,6 @@ def main():
         user_query = st.text_input("Your message:")
         if user_query:
             with st.spinner("Generating response..."):
-                # Construct prompt using system prompt and document context if available.
                 if st.session_state.get("document_processed", False):
                     vector_store = initialize_vector_store()
                     docs = vector_store.similarity_search(user_query, k=3)
@@ -283,11 +286,11 @@ def main():
                     "answer": response.content
                 })
         
-        # Display chat history as chat bubbles with bold black text.
+        # Render chat
         for chat in st.session_state.chat_history:
             st.markdown(f"""
             <div class="chat-box">
-                <p class="user-message">🙋 You: {chat['question']}</p>
+                <p class="user-message">🙋✨ You: {chat['question']}</p>
                 <p class="bot-message">🤖 AI: {chat['answer']}</p>
             </div>
             """, unsafe_allow_html=True)
