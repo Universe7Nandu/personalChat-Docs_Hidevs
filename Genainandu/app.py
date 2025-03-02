@@ -211,6 +211,7 @@ def main():
     /* AI response: bold black text */
     .bot-message {
         color: #000 !important;
+        color:#2e0bf8 important
         line-height: 1.6;
         font-size: 1.1em;
         font-weight: bold;
