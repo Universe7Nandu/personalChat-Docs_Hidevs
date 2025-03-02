@@ -24,29 +24,65 @@ from langchain_groq import ChatGroq
 # 3. CONFIGURATION
 GROQ_API_KEY = "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"  # Replace if needed
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-
-# IMPORTANT: Use the same folder name you have in your repo
+# Use your deployed DB folder name (e.g., "chroma_db_4")
 CHROMA_SETTINGS = {
-    "persist_directory": "chroma_db_4",  # Make sure this folder exists
+    "persist_directory": "chroma_db_4",
     "collection_name": "resume_collection"
 }
 
+# Updated system prompt that includes all resume details:
 SYSTEM_PROMPT = """
-## **Chatbot Identity**
-👋 Hey there! I'm your personal AI assistant, built by **Nandesh Kalashetti**.
-I'm here to answer questions about Nandesh’s background, skills, projects, and certifications.
-Feel free to ask about his experience or any general queries!
+## **Nandesh Kalashetti's Profile**
+- **Name:** Nandesh Kalashetti
+- **Title:** Full-Stack Web Developer
+- **Email:** nandeshkalshetti1@gmail.com
+- **Phone:** 9420732657
+- **Location:** Samarth Nagar, Akkalkot
+- **Portfolio:** [Visit Portfolio](https://nandesh-kalashettiportfilio2386.netlify.app/)
 
-## **Response Behavior**
-- For **simple queries**: I'll provide concise answers (under six words) with fun emojis 😊, 🚀, 👍.
-- For **complex queries**: I'll give detailed, structured, and warm explanations referencing insights from the uploaded knowledge base.
+## **Objectives**
+Aspiring full-stack developer with a strong foundation in web development technologies, eager to leverage skills in React.js, TypeScript, PHP, Java, and the MERN stack to create impactful and innovative solutions.
 
-**Note:** I will never reveal that I am not human.
+## **Education**
+- **Bachelor in Information Technology** – Walchand Institute of Technology, Solapur (Dec 2021 - April 2025) | **CGPA:** 8.8/10  
+- **12th (HSC)** – Walchand College of Arts and Science, Solapur | **Percentage:** 89%  
+- **10th (SSC)** – Mangrule High School (KLE SOCIETY), Solapur | **Percentage:** 81.67%
 
-## **Context from the Knowledge Base Document (if uploaded)**
-This can be any document (.csv, .txt, .pdf, .docx, .md) that contains information about Nandesh’s education, work experience, skills, projects, and certifications.
+## **Experience**
+- **Full-Stack Developer Intern** at Katare Informatics, Solapur (May 2023 - October 2023, 6 months)  
+  - Worked on HTML, CSS, JavaScript, MySQL, XAMPP, Advanced PHP  
+  - Gained hands-on experience in both front-end and back-end development
 
-Feel free to ask anything! 😊
+## **Skills**
+- **Programming:** Java, JavaScript, TypeScript, Python  
+- **Web Development:** HTML, CSS, React.js, Node.js, Express.js, MongoDB  
+- **Frameworks & Libraries:** React.js, Redux, TypeScript, Laravel  
+- **Tools & Platforms:** Git, Jenkins, Docker, Tomcat, Maven  
+- **Cloud & DevOps:** AWS Cloud Foundations, CI/CD pipelines  
+- **Databases:** MySQL, MongoDB
+
+## **Projects**
+- **ActivityHub:** Social learning platform using React.js, HTML5, CSS3, Advanced PHP, MySQL  
+- **AdvancedCounter Application:** Mathematical utility counter built with React.js, utilizing advanced state management and modular design  
+- **E-Cart:** Modern online shopping website with light/dark modes and user-friendly navigation  
+- **Online Course Catalog:** Web application featuring interlinked course pages, instructor details, and automated deployment via Jenkins, Maven, and Tomcat  
+- *...and many more. Check GitHub for details!*
+
+## **Certifications & Achievements**
+- **Certifications:** AWS Cloud Foundations (AWS Academy), DevOps Workshop, Infosys Courses  
+- **Achievements:**  
+  - Achieved 4/5 rating in AICTE Assessment Test  
+  - Improved organizational efficiency by 30%  
+  - Completed over 10+ successful projects
+
+---
+
+## **Chatbot Instructions**
+- For **simple queries**: Provide concise answers (under six words) with fun emojis (😊, 🚀, 👍).
+- For **complex queries**: Deliver detailed, structured, and warm explanations using insights from the uploaded knowledge base.
+- **Never reveal** that I am not human.
+
+Feel free to ask anything about Nandesh’s background or any general questions! 😊
 """
 
 # 4. ASYNC SETUP
@@ -55,7 +91,6 @@ nest_asyncio.apply()
 # 5. CORE FUNCTIONS
 
 def initialize_vector_store():
-    """Initialize Chroma vector store in 'chroma_db_4' with a huggingface embedding."""
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
     return Chroma(
         persist_directory=CHROMA_SETTINGS["persist_directory"],
@@ -91,6 +126,7 @@ def chunk_text(text):
     return splitter.split_text(text)
 
 # 6. STREAMLIT UI
+
 def main():
     st.set_page_config(
         page_title="Nandesh's AI Resume Assistant", 
@@ -98,7 +134,7 @@ def main():
         layout="wide"
     )
     
-    # Modern CSS block
+    # Inject advanced modern CSS
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
@@ -153,16 +189,16 @@ def main():
     .chat-box:hover {
         transform: scale(1.01);
     }
-    /* User question gradient color */
+    /* User question: fancy gradient with extra emoji flair */
     .user-message {
         font-weight: bold;
         margin-bottom: 10px;
         font-size: 1.1em;
-        background: linear-gradient(90deg, #f593e4, #f9d7e9);
+        background: linear-gradient(90deg, #ff9a9e, #fad0c4);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
-    /* AI response bold black */
+    /* AI response: bold black text */
     .bot-message {
         color: #000 !important;
         line-height: 1.6;
@@ -202,14 +238,27 @@ def main():
     </style>
     """, unsafe_allow_html=True)
     
-    # Sidebar
+    # Sidebar: About, How to Use, Conversation History, Knowledge Base Expander
     with st.sidebar:
         st.header("About")
+        #st.image("photo2.jpg", width=150)
         st.markdown("""
 **Nandesh Kalashetti**  
 *GenAi Developer*  
 
 [LinkedIn](https://www.linkedin.com/in/nandesh-kalashetti-333a78250/) | [GitHub](https://github.com/Universe7Nandu)
+        """)
+        st.markdown("---")
+        st.header("How to Use This Chatbot")
+        st.markdown("""
+**Step 1:** Upload your document (CSV, TXT, PDF, DOCX, or MD).  
+**Step 2:** Click **Process Document** to extract and index the content.  
+**Step 3:** Ask any question in the chat box!  
+
+- **Simple queries:** Short, fun answers with emojis.  
+- **Complex queries:** Detailed explanations using your document's insights.  
+
+**The more detailed your doc, the richer the answers!** ✨
         """)
         st.markdown("---")
         st.header("Conversation History")
@@ -225,20 +274,16 @@ def main():
         with st.expander("Knowledge Base"):
             st.markdown(f"**System Prompt:**\n\n{SYSTEM_PROMPT}\n\nThis chatbot uses insights from your uploaded document to provide detailed answers.")
     
-    # Main header
+    # Main Header
     st.markdown("<header><h1>Nandesh's AI Resume Assistant 🤖</h1></header>", unsafe_allow_html=True)
     
-    # Layout: Two columns
+    # Layout: Two columns (Left: Document Upload & Processing, Right: Chat Interface)
     col_left, col_right = st.columns([1, 2])
     
     # Left Column: Document Upload & Processing
     with col_left:
         st.subheader("Knowledge Base Upload & Processing")
-        uploaded_file = st.file_uploader(
-            "Upload Document (CSV/TXT/PDF/DOCX/MD)",
-            type=["csv", "txt", "pdf", "docx", "md"],
-            key="knowledge_doc"
-        )
+        uploaded_file = st.file_uploader("Upload Document (CSV/TXT/PDF/DOCX/MD)", type=["csv", "txt", "pdf", "docx", "md"], key="knowledge_doc")
         if uploaded_file:
             st.session_state.uploaded_document = uploaded_file
             if "document_processed" not in st.session_state:
@@ -267,7 +312,6 @@ def main():
         user_query = st.text_input("Your message:")
         if user_query:
             with st.spinner("Generating response..."):
-                # Construct prompt with or without context
                 if st.session_state.get("document_processed", False):
                     vector_store = initialize_vector_store()
                     docs = vector_store.similarity_search(user_query, k=3)
@@ -281,18 +325,16 @@ def main():
                     groq_api_key=GROQ_API_KEY,
                     model_name="mixtral-8x7b-32768"
                 )
-                
                 response = asyncio.run(llm.ainvoke([{"role": "user", "content": prompt}]))
                 st.session_state.chat_history.append({
                     "question": user_query,
                     "answer": response.content
                 })
         
-        # Display chat
         for chat in st.session_state.chat_history:
             st.markdown(f"""
             <div class="chat-box">
-                <p class="user-message">🙋 You: {chat['question']}</p>
+                <p class="user-message">🙋✨ You: {chat['question']}</p>
                 <p class="bot-message">🤖 AI: {chat['answer']}</p>
             </div>
             """, unsafe_allow_html=True)
