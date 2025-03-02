@@ -225,7 +225,7 @@ def main():
         border: none;
         border-radius: 8px;
         padding: 10px 20px;
-        color: #fff;
+        color: #black;
         font-weight: 600;
         transition: transform 0.2s, box-shadow 0.2s;
     }
