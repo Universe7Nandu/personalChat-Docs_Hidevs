@@ -95,7 +95,7 @@ def chunk_text(text):
 # 6. STREAMLIT UI
 def main():
     st.set_page_config(
-        page_title="Nandesh's AI Resume Assistant", 
+        page_title="Nandesh's AI Assistant", 
         page_icon="🤖",
         layout="wide"
     )
@@ -179,7 +179,7 @@ def main():
     # Sidebar: About, Conversation History, and Knowledge Base Expander.
     with st.sidebar:
         st.header("About")
-        st.image("photo2.jpg", width=150)
+        #st.image("photo2.jpg", width=150)
         st.markdown("""
 **Nandesh Kalashetti**  
 *GenAi Developer*  
