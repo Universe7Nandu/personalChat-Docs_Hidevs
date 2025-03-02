@@ -22,7 +22,7 @@ from langchain_community.vectorstores import Chroma
 from langchain_groq import ChatGroq
 
 # 3. CONFIGURATION
-GROQ_API_KEY = "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"  # Replace if needed
+GROQ_API_KEY = "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"  # Replace if needed
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 CHROMA_SETTINGS = {
     "persist_directory": "resume_db",
@@ -43,11 +43,7 @@ Feel free to ask about his experience or any general queries!
 **Note:** I will never reveal that I am not human.
 
 ## **Context from the Knowledge Base Document (if uploaded)**
-- **Education:** Bachelor in IT (CGPA: 8.8), HSC (89%), SSC (81.67%)
-- **Experience:** Full-Stack Developer Intern at Katare Informatics (6 months)
-- **Skills:** Java, JavaScript, TypeScript, Python, React.js, Node.js, PHP, MySQL, AWS, DevOps, etc.
-- **Projects:** ActivityHub, Advanced Counter App, E-Cart, Online Course Catalog, and more.
-- **Certifications:** AWS Cloud Foundations, DevOps Workshop, etc.
+This can be any document (.csv, .txt, .pdf, .docx, .md) that contains information about Nandesh’s education, work experience, skills, projects, and certifications.
 
 Feel free to ask anything! 😊
 """
@@ -56,7 +52,6 @@ Feel free to ask anything! 😊
 nest_asyncio.apply()
 
 # 5. CORE FUNCTIONS
-
 def initialize_vector_store():
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
     return Chroma(
@@ -66,7 +61,7 @@ def initialize_vector_store():
     )
 
 def process_document(file):
-    """Process a document (PDF, CSV, TXT, DOCX, MD) and return its text."""
+    """Process document based on file extension and return text."""
     ext = os.path.splitext(file.name)[1].lower()
     try:
         if ext == ".pdf":
@@ -95,12 +90,12 @@ def chunk_text(text):
 # 6. STREAMLIT UI
 def main():
     st.set_page_config(
-        page_title="Nandesh's AI Assistant", 
+        page_title="Nandesh's AI Resume Assistant", 
         page_icon="🤖",
         layout="wide"
     )
     
-    # Inject modern CSS (glassmorphism-inspired design)
+    # Inject advanced modern CSS
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
@@ -114,20 +109,24 @@ def main():
         text-align: center;
         padding: 20px;
         margin-bottom: 30px;
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.25);
         border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     }
     h1 {
         font-size: 3em;
         color: #fff;
         margin: 0;
     }
-    /* Sidebar Styles */
+    /* Sidebar */
     [data-testid="stSidebar"] {
         background: linear-gradient(135deg, #0f2027, #203a43, #2c5364) !important;
         color: #fff;
         padding: 20px;
+        transition: background 0.5s ease;
+    }
+    [data-testid="stSidebar"]:hover {
+        background: linear-gradient(135deg, #0b1720, #1a2e3a, #223f55) !important;
     }
     [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
         color: #ffdd57;
@@ -136,13 +135,20 @@ def main():
         color: #ffdd57;
         text-decoration: none;
     }
-    /* Chat Bubble Styles */
+    [data-testid="stSidebar"] a:hover {
+        text-decoration: underline;
+    }
+    /* Chat Bubble */
     .chat-box {
-        background: rgba(255, 255, 255, 0.85);
+        background: rgba(255, 255, 255, 0.9);
         border-radius: 12px;
         padding: 20px;
         margin-bottom: 15px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease;
+    }
+    .chat-box:hover {
+        transform: scale(1.01);
     }
     .user-message {
         color: #007BFF;
@@ -160,15 +166,20 @@ def main():
         padding: 10px 20px;
         color: #fff;
         font-weight: 600;
-        transition: transform 0.2s;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
     .stButton>button:hover {
         transform: scale(1.03);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
     .stTextInput>div>div>input {
         border-radius: 8px;
         border: 1px solid #ccc;
         padding: 10px;
+        transition: border-color 0.2s;
+    }
+    .stTextInput>div>div>input:focus {
+        border-color: #ff7e5f;
     }
     .process-btn {
         margin-top: 10px;
@@ -176,15 +187,29 @@ def main():
     </style>
     """, unsafe_allow_html=True)
     
-    # Sidebar: About, Conversation History, and Knowledge Base Expander.
+    # Sidebar: About, How to Use, Conversation History, Knowledge Base
     with st.sidebar:
         st.header("About")
-        #st.image("photo2.jpg", width=150)
+        st.image("photo2.jpg", width=150)
         st.markdown("""
 **Nandesh Kalashetti**  
 *GenAi Developer*  
 
 [LinkedIn](https://www.linkedin.com/in/nandesh-kalashetti-333a78250/) | [GitHub](https://github.com/Universe7Nandu)
+        """)
+        st.markdown("---")
+        st.header("How to Use This Chatbot")
+        st.markdown("""
+**Step 1:** Upload your document (knowledge base) in any supported format  
+*(CSV, TXT, PDF, DOCX, MD)* to provide context for detailed responses.
+
+**Step 2:** Click **Process Document** to extract and index the content.
+
+**Step 3:** Ask any question in the chat box.  
+- **Simple queries:** Receive short, fun answers with emojis.  
+- **Complex queries:** Receive detailed explanations using your document's insights.
+
+*The more detailed your document, the richer the answers!*
         """)
         st.markdown("---")
         st.header("Conversation History")
@@ -200,13 +225,13 @@ def main():
         with st.expander("Knowledge Base"):
             st.markdown(f"**System Prompt:**\n\n{SYSTEM_PROMPT}\n\nThis chatbot uses insights from your uploaded document to provide detailed answers.")
     
-    # Main Header
-    st.markdown("<header><h1>Nandu's AI Assistant🤖</h1></header>", unsafe_allow_html=True)
+    # Main header
+    st.markdown("<header><h1>AI Resume Assistant 🤖</h1></header>", unsafe_allow_html=True)
     
-    # Layout: Two columns (Left: Knowledge Base Upload & Processing, Right: Chat Interface)
+    # Layout: Two columns (Left: Document Upload & Processing, Right: Chat Interface)
     col_left, col_right = st.columns([1, 2])
     
-    # Left Column: Knowledge Base Upload & Processing Section
+    # Left Column: Document Upload & Processing Section
     with col_left:
         st.subheader("Knowledge Base Upload & Processing")
         uploaded_file = st.file_uploader("Upload Document (CSV/TXT/PDF/DOCX/MD)", type=["csv", "txt", "pdf", "docx", "md"], key="knowledge_doc")
@@ -215,7 +240,7 @@ def main():
             if "document_processed" not in st.session_state:
                 st.session_state.document_processed = False
             if not st.session_state.document_processed:
-                if st.button("Process Document", key="process_doc", help="Extract and index the document"):
+                if st.button("Process Document", key="process_doc", help="Extract and index document content"):
                     with st.spinner("Processing document..."):
                         text = process_document(uploaded_file)
                         if text:
@@ -238,7 +263,7 @@ def main():
         user_query = st.text_input("Your message:")
         if user_query:
             with st.spinner("Generating response..."):
-                # Build the prompt using system prompt and document context if available.
+                # Construct prompt using system prompt and document context if available.
                 if st.session_state.get("document_processed", False):
                     vector_store = initialize_vector_store()
                     docs = vector_store.similarity_search(user_query, k=3)
@@ -257,7 +282,7 @@ def main():
                     "answer": response.content
                 })
         
-        # Display chat history as modern chat bubbles with emojis.
+        # Display chat history as chat bubbles with emojis.
         for chat in st.session_state.chat_history:
             st.markdown(f"""
             <div class="chat-box">
@@ -265,29 +290,6 @@ def main():
                 <p class="bot-message">🤖 AI: {chat['answer']}</p>
             </div>
             """, unsafe_allow_html=True)
-
-def process_document(file):
-    """Process a document (PDF, CSV, TXT, DOCX, MD) and return its text."""
-    ext = os.path.splitext(file.name)[1].lower()
-    try:
-        if ext == ".pdf":
-            pdf = PdfReader(file)
-            return "\n".join(page.extract_text() for page in pdf.pages)
-        elif ext == ".csv":
-            df = pd.read_csv(file)
-            return df.to_csv(index=False)
-        elif ext in [".txt", ".md"]:
-            return file.getvalue().decode("utf-8")
-        elif ext == ".docx":
-            doc = Document(file)
-            paragraphs = [para.text for para in doc.paragraphs]
-            return "\n".join(paragraphs)
-        else:
-            st.error("Unsupported file format.")
-            return ""
-    except Exception as e:
-        st.error(f"Error processing document: {str(e)}")
-        return ""
-
+    
 if __name__ == "__main__":
     main()
