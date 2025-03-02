@@ -29,7 +29,7 @@ CHROMA_SETTINGS = {
     "collection_name": "resume_collection"
 }
 
-# Define the system prompt with detailed instructions.
+# Define the system prompt with your chatbot instructions and profile details.
 SYSTEM_PROMPT = """
 ## **Chatbot Identity**
 👋 Hey there! I'm your personal AI assistant, built by **Nandesh Kalashetti**.
@@ -61,7 +61,7 @@ def initialize_vector_store():
     )
 
 def process_document(file):
-    """Process document based on file extension and return text."""
+    """Process a document (PDF, CSV, TXT, DOCX, MD) and return its text."""
     ext = os.path.splitext(file.name)[1].lower()
     try:
         if ext == ".pdf":
@@ -95,7 +95,7 @@ def main():
         layout="wide"
     )
     
-    # Inject advanced modern CSS
+    # --- UPDATED CSS BLOCK ---
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
@@ -151,13 +151,16 @@ def main():
         transform: scale(1.01);
     }
     .user-message {
-        color: #007BFF;
+        color: #000 !important; /* Force user text to black */
         font-weight: bold;
         margin-bottom: 10px;
+        font-size: 1.1em;
     }
     .bot-message {
-        color: #333;
+        color: #000 !important; /* Force bot text to black */
         line-height: 1.6;
+        font-size: 1.1em;
+        font-weight: bold;
     }
     .stButton>button {
         background: linear-gradient(135deg, #ff7e5f, #feb47b);
@@ -190,7 +193,7 @@ def main():
     # Sidebar: About, How to Use, Conversation History, Knowledge Base
     with st.sidebar:
         st.header("About")
-        #st.image("photo2.jpg", width=150)
+        st.image("photo2.jpg", width=150)
         st.markdown("""
 **Nandesh Kalashetti**  
 *GenAi Developer*  
@@ -200,16 +203,14 @@ def main():
         st.markdown("---")
         st.header("How to Use This Chatbot")
         st.markdown("""
-**Step 1:** Upload your document (knowledge base) in any supported format  
-*(CSV, TXT, PDF, DOCX, MD)* to provide context for detailed responses.
+**Step 1:** Upload your document (CSV, TXT, PDF, DOCX, or MD).  
+**Step 2:** Click **Process Document** to extract and index the content.  
+**Step 3:** Ask any question in the chat box!  
 
-**Step 2:** Click **Process Document** to extract and index the content.
-
-**Step 3:** Ask any question in the chat box.  
 - **Simple queries:** Receive short, fun answers with emojis.  
-- **Complex queries:** Receive detailed explanations using your document's insights.
+- **Complex queries:** Receive detailed explanations using your document's insights.  
 
-*The more detailed your document, the richer the answers!*
+**The more detailed your doc, the richer the answers!** ✨
         """)
         st.markdown("---")
         st.header("Conversation History")
@@ -248,7 +249,7 @@ def main():
                             vector_store = initialize_vector_store()
                             vector_store.add_texts(chunks)
                             st.session_state.document_processed = True
-                            st.success(f"Processed {len(chunks)} document sections")
+                            st.success(f"Processed {len(chunks)} document sections ✅")
             else:
                 st.info("Document processed successfully!")
         else:
@@ -282,7 +283,7 @@ def main():
                     "answer": response.content
                 })
         
-        # Display chat history as chat bubbles with emojis.
+        # Display chat history as chat bubbles with bold black text.
         for chat in st.session_state.chat_history:
             st.markdown(f"""
             <div class="chat-box">
@@ -290,6 +291,6 @@ def main():
                 <p class="bot-message">🤖 AI: {chat['answer']}</p>
             </div>
             """, unsafe_allow_html=True)
-    
+
 if __name__ == "__main__":
     main()
