@@ -280,12 +280,27 @@ GenAi Developer
         st.markdown("---")
         st.header("How to Use This Chatbot")
         st.markdown("""
-*Step 1:* Upload your document (CSV, TXT, PDF, DOCX, or MD).  
-*Step 2:* Click *Process Document* to extract and index the content.  
-*Step 3:* Ask any question in the chat box!  
+**User Instructions for Using the Chatbot:**
 
-- *If NO doc is uploaded*: The chatbot uses Nandesh's info.  
-- *If doc is uploaded*: The chatbot only uses the doc's content.  
+1. **Clear Your Browser Cache (Optional):**  
+   - Press `Ctrl + Shift + R` (Windows/Linux) or `Cmd + Shift + R` (Mac) to refresh the page and clear cached data.
+
+2. **Document Upload:**  
+   - If you want the chatbot to use your document, make sure the document upload field is empty first.  
+   - Click the "Upload" button and select your file (supported formats: PDF, DOCX, TXT, CSV, MD).  
+   - If you do not upload a document (i.e., the field remains empty), the chatbot will default to Nandesh’s profile information.
+
+3. **Process the Document:**  
+   - After uploading, click the "Process Document" button.  
+   - Wait for the confirmation message that the document has been processed successfully.
+
+4. **Chat with the AI:**  
+   - Enter your question in the chat input field and press Enter.  
+   - If you have processed a document, the chatbot will use only the document's content to answer.  
+   - If no document was uploaded, it will use the default information.
+
+5. **New Chat:**  
+   - To reset the conversation and clear previous document data, click the "New Chat" button.  
 
 *The more detailed your doc, the richer the answers!* ✨
         """)
