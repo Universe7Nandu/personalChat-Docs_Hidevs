@@ -1,4 +1,5 @@
 # app.py
+
 import sys
 import os
 
@@ -30,8 +31,12 @@ CHROMA_SETTINGS = {
     "collection_name": "resume_collection"
 }
 
-# Updated system prompt that includes all resume details:
-SYSTEM_PROMPT = """
+# --------------------------------------------------------------------------------
+# TWO SEPARATE PROMPTS:
+# --------------------------------------------------------------------------------
+
+# Prompt for when NO DOCUMENT is uploaded (uses Nandesh's info).
+NANDESH_SYSTEM_PROMPT = """
 ## **Nandesh Kalashetti's Profile**
 - **Name:** Nandesh Kalashetti
 - **Title:** Full-Stack Web Developer
@@ -79,20 +84,37 @@ Aspiring full-stack developer with a strong foundation in web development techno
 
 ## **Chatbot Instructions**
 - For **simple queries**: Provide concise answers (under six words) with fun emojis (😊, 🚀, 👍).
-- For **complex queries**: Deliver detailed, structured, and warm explanations using insights from the uploaded knowledge base.
+- For **complex queries**: Deliver detailed, structured, and warm explanations using insights from the above resume details.
 - **Never reveal** that I am not human.
 
-##**Additional Guidelines:**
-- Separate equations and explanations clearly. Use block formatting (e.g., `$$...$$` for equations) and inline formatting (e.g., `\(...\)`) for mathematical expressions.
-- If multiple solutions exist for a problem, discuss the different approaches and their relative merits.
-- If you’re unsure of an answer, explicitly state the uncertainty and explain the reasoning behind it.
-- Use indentation and formatting where needed to enhance readability.
-- Maintain a warm, engaging, and professional demeanor at all times.
-- Encourage users to ask follow-up questions to deepen their understanding.
- **Real-World Relevance:**  
-  - Provide answers that are applicable to real-world scenarios, ensuring that every solution is grounded in practical insights.
-- **Context Utilization:**  
-Feel free to ask anything about Nandesh’s background or any general questions! 😊
+**Additional Guidelines:**
+- Use block formatting for equations (`$$...$$`) and inline (`\(...\)`).
+- If multiple solutions exist for a problem, discuss different approaches.
+- If unsure, explicitly state uncertainty.
+- Maintain a warm, engaging, and professional tone.
+- Encourage follow-up questions.
+- Provide real-world relevance in explanations.
+- Leverage the above context about Nandesh's background whenever relevant.
+
+Feel free to ask anything about Nandesh’s background! 😊
+"""
+
+# Prompt for when a DOCUMENT IS UPLOADED (uses only that doc).
+DOC_SYSTEM_PROMPT = """
+## Chatbot Instructions
+- For **simple queries**: Provide concise answers (under six words) with fun emojis (😊, 🚀, 👍).
+- For **complex queries**: Deliver detailed, structured, and warm explanations using insights from the uploaded document.
+- **Never reveal** that I am not human.
+
+**Additional Guidelines:**
+- Use block formatting for equations (`$$...$$`) and inline (`\(...\)`).
+- If multiple solutions exist for a problem, discuss different approaches.
+- If unsure, explicitly state uncertainty.
+- Maintain a warm, engaging, and professional tone.
+- Encourage follow-up questions.
+- Provide real-world relevance in explanations.
+- **Use ONLY the uploaded document's context** to answer questions.
+- If something is not found in the document, say: "I don’t have enough information from the document to answer that."
 """
 
 # 4. ASYNC SETUP
@@ -139,7 +161,7 @@ def chunk_text(text):
 
 def main():
     st.set_page_config(
-        page_title="Nandesh's AI Resume Assistant", 
+        page_title="Nandesh's AI Assistant", 
         page_icon="🤖",
         layout="wide"
     )
@@ -251,7 +273,6 @@ def main():
     # Sidebar: About, How to Use, Conversation History, Knowledge Base Expander
     with st.sidebar:
         st.header("About")
-        #st.image("photo2.jpg", width=150)
         st.markdown("""
 **Nandesh Kalashetti**  
 *GenAi Developer*  
@@ -265,8 +286,8 @@ def main():
 **Step 2:** Click **Process Document** to extract and index the content.  
 **Step 3:** Ask any question in the chat box!  
 
-- **Simple queries:** Short, fun answers with emojis.  
-- **Complex queries:** Detailed explanations using your document's insights.  
+- **If NO doc is uploaded**: The chatbot uses Nandesh's info.  
+- **If doc is uploaded**: The chatbot only uses the doc's content.  
 
 **The more detailed your doc, the richer the answers!** ✨
         """)
@@ -274,6 +295,7 @@ def main():
         st.header("Conversation History")
         if st.button("New Chat", key="new_chat"):
             st.session_state.chat_history = []
+            st.session_state.document_processed = False
             st.success("Started new conversation!")
         if st.session_state.get("chat_history"):
             for i, chat in enumerate(st.session_state.chat_history, 1):
@@ -282,7 +304,13 @@ def main():
             st.info("No conversation history yet.")
         st.markdown("---")
         with st.expander("Knowledge Base"):
-            st.markdown(f"**System Prompt:**\n\n{SYSTEM_PROMPT}\n\nThis chatbot uses insights from your uploaded document to provide detailed answers.")
+            st.markdown("""
+**Modes**:
+- **No document uploaded** → Uses Nandesh's resume info.
+- **Document uploaded** → Uses only that document.
+
+You can ask any questions based on the currently active mode.
+            """)
     
     # Main Header
     st.markdown("<header><h1>Nandesh's AI Assistant 🤖</h1></header>", unsafe_allow_html=True)
@@ -293,7 +321,9 @@ def main():
     # Left Column: Document Upload & Processing
     with col_left:
         st.subheader("Knowledge Base Upload & Processing")
-        uploaded_file = st.file_uploader("Upload Document (CSV/TXT/PDF/DOCX/MD)", type=["csv", "txt", "pdf", "docx", "md"], key="knowledge_doc")
+        uploaded_file = st.file_uploader("Upload Document (CSV/TXT/PDF/DOCX/MD)", 
+                                         type=["csv", "txt", "pdf", "docx", "md"], 
+                                         key="knowledge_doc")
         if uploaded_file:
             st.session_state.uploaded_document = uploaded_file
             if "document_processed" not in st.session_state:
@@ -311,7 +341,7 @@ def main():
             else:
                 st.info("Document processed successfully!")
         else:
-            st.info("Upload your document to enrich chat responses.")
+            st.info("Upload a document to override Nandesh's info with your own content.")
     
     # Right Column: Chat Interface
     with col_right:
@@ -322,13 +352,16 @@ def main():
         user_query = st.text_input("Your message:")
         if user_query:
             with st.spinner("Generating response..."):
+                # Check if a document is processed:
                 if st.session_state.get("document_processed", False):
+                    # Use only the uploaded doc
                     vector_store = initialize_vector_store()
                     docs = vector_store.similarity_search(user_query, k=3)
                     context = "\n".join([d.page_content for d in docs])
-                    prompt = f"Context: {context}\nQuestion: {user_query}"
+                    prompt = f"{DOC_SYSTEM_PROMPT}\nContext:\n{context}\nQuestion: {user_query}"
                 else:
-                    prompt = f"{SYSTEM_PROMPT}\nQuestion: {user_query}"
+                    # Use Nandesh's info
+                    prompt = f"{NANDESH_SYSTEM_PROMPT}\nQuestion: {user_query}"
                 
                 llm = ChatGroq(
                     temperature=0.7,
@@ -336,11 +369,13 @@ def main():
                     model_name="mixtral-8x7b-32768"
                 )
                 response = asyncio.run(llm.ainvoke([{"role": "user", "content": prompt}]))
+                
                 st.session_state.chat_history.append({
                     "question": user_query,
                     "answer": response.content
                 })
         
+        # Display the conversation
         for chat in st.session_state.chat_history:
             st.markdown(f"""
             <div class="chat-box">
