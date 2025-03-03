@@ -23,7 +23,7 @@ from langchain_community.vectorstores import Chroma
 from langchain_groq import ChatGroq
 
 # 3. CONFIGURATION
-GROQ_API_KEY = "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"  # Replace if needed
+GROQ_API_KEY = "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"  # Replace if needed
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 # Use your deployed DB folder name (e.g., "chroma_db_4")
 CHROMA_SETTINGS = {
