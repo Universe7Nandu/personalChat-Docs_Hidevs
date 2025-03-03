@@ -25,9 +25,8 @@ from langchain_groq import ChatGroq
 # 3. CONFIGURATION
 GROQ_API_KEY = "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"  # Replace if needed
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-# Use your deployed DB folder name (e.g., "chroma_db_4")
 CHROMA_SETTINGS = {
-    "persist_directory": "chroma_db_4",
+    "persist_directory": "chroma_db_4",  # your folder name for storing DB
     "collection_name": "resume_collection"
 }
 
@@ -35,7 +34,7 @@ CHROMA_SETTINGS = {
 # TWO SEPARATE PROMPTS:
 # --------------------------------------------------------------------------------
 
-# Prompt for when NO DOCUMENT is uploaded (uses Nandesh's info).
+# Prompt used when NO DOCUMENT is uploaded (Nandesh’s info).
 NANDESH_SYSTEM_PROMPT = """
 ## **Nandesh Kalashetti's Profile**
 - **Name:** Nandesh Kalashetti
@@ -94,12 +93,10 @@ Aspiring full-stack developer with a strong foundation in web development techno
 - Maintain a warm, engaging, and professional tone.
 - Encourage follow-up questions.
 - Provide real-world relevance in explanations.
-- Leverage the above context about Nandesh's background whenever relevant.
-
-Feel free to ask anything about Nandesh’s background! 😊
+- Use the above context about Nandesh's background whenever relevant.
 """
 
-# Prompt for when a DOCUMENT IS UPLOADED (uses only that doc).
+# Prompt used when a DOCUMENT IS UPLOADED (use only that doc).
 DOC_SYSTEM_PROMPT = """
 ## Chatbot Instructions
 - For **simple queries**: Provide concise answers (under six words) with fun emojis (😊, 🚀, 👍).
@@ -221,7 +218,7 @@ def main():
     .chat-box:hover {
         transform: scale(1.01);
     }
-    /* User question: fancy gradient with extra emoji flair */
+    /* User message: fancy gradient */
     .user-message {
         font-weight: bold;
         margin-bottom: 10px;
@@ -247,7 +244,7 @@ def main():
         border: none;
         border-radius: 8px;
         padding: 10px 20px;
-        color: #black;
+        color: #000;
         font-weight: 600;
         transition: transform 0.2s, box-shadow 0.2s;
     }
@@ -270,7 +267,7 @@ def main():
     </style>
     """, unsafe_allow_html=True)
     
-    # Sidebar: About, How to Use, Conversation History, Knowledge Base Expander
+    # Sidebar: About, How to Use, Conversation History, Knowledge Base
     with st.sidebar:
         st.header("About")
         st.markdown("""
@@ -280,18 +277,25 @@ def main():
 [LinkedIn](https://www.linkedin.com/in/nandesh-kalashetti-333a78250/) | [GitHub](https://github.com/Universe7Nandu)
         """)
         st.markdown("---")
-        st.header("How to Use This Chatbot")
+        
+        st.header("How to Use")
         st.markdown("""
-**Step 1:** Upload your document (CSV, TXT, PDF, DOCX, or MD).  
-**Step 2:** Click **Process Document** to extract and index the content.  
-**Step 3:** Ask any question in the chat box!  
+1. **No Document Uploaded?**  
+   - The chatbot will use Nandesh's information by default.  
+   - Simply type your question about Nandesh.
 
-- **If NO doc is uploaded**: The chatbot uses Nandesh's info.  
-- **If doc is uploaded**: The chatbot only uses the doc's content.  
+2. **Have a Document?**  
+   - Upload your file (CSV, TXT, PDF, DOCX, or MD).  
+   - Click "Process Document" to extract and index its content.  
+   - After that, the chatbot will ONLY use your document to answer questions.
 
-**The more detailed your doc, the richer the answers!** ✨
+3. **Ask Questions**  
+   - Type your question in the "Your message" box and hit Enter.
+
+**Tip:** The more details in your document, the better the answers!
         """)
         st.markdown("---")
+        
         st.header("Conversation History")
         if st.button("New Chat", key="new_chat"):
             st.session_state.chat_history = []
@@ -302,14 +306,15 @@ def main():
                 st.markdown(f"**{i}. 🙋 You:** {chat['question']}")
         else:
             st.info("No conversation history yet.")
+        
         st.markdown("---")
         with st.expander("Knowledge Base"):
             st.markdown("""
-**Modes**:
-- **No document uploaded** → Uses Nandesh's resume info.
-- **Document uploaded** → Uses only that document.
+**Two Modes**:
+- **No Document**: Uses Nandesh's resume info.
+- **Document Uploaded**: Uses only the uploaded doc.
 
-You can ask any questions based on the currently active mode.
+Have fun exploring the bot's answers!
             """)
     
     # Main Header
@@ -320,14 +325,18 @@ You can ask any questions based on the currently active mode.
     
     # Left Column: Document Upload & Processing
     with col_left:
-        st.subheader("Knowledge Base Upload & Processing")
-        uploaded_file = st.file_uploader("Upload Document (CSV/TXT/PDF/DOCX/MD)", 
-                                         type=["csv", "txt", "pdf", "docx", "md"], 
-                                         key="knowledge_doc")
+        st.subheader("Document Upload & Processing")
+        uploaded_file = st.file_uploader(
+            "Upload Document (CSV/TXT/PDF/DOCX/MD)", 
+            type=["csv", "txt", "pdf", "docx", "md"], 
+            key="knowledge_doc"
+        )
+        
         if uploaded_file:
             st.session_state.uploaded_document = uploaded_file
             if "document_processed" not in st.session_state:
                 st.session_state.document_processed = False
+            
             if not st.session_state.document_processed:
                 if st.button("Process Document", key="process_doc", help="Extract and index document content"):
                     with st.spinner("Processing document..."):
@@ -341,18 +350,20 @@ You can ask any questions based on the currently active mode.
             else:
                 st.info("Document processed successfully!")
         else:
-            st.info("Upload a document to override Nandesh's info with your own content.")
+            st.info("If you don't upload a document, the bot will use Nandesh's info by default.")
     
     # Right Column: Chat Interface
     with col_right:
         st.subheader("Chat with AI")
+        
         if "chat_history" not in st.session_state:
             st.session_state.chat_history = []
         
         user_query = st.text_input("Your message:")
+        
         if user_query:
             with st.spinner("Generating response..."):
-                # Check if a document is processed:
+                # Check if a document is processed
                 if st.session_state.get("document_processed", False):
                     # Use only the uploaded doc
                     vector_store = initialize_vector_store()
