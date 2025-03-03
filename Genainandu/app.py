@@ -5,7 +5,7 @@ import os
 
 # 1. SQLITE3 PATCH (MUST BE FIRST)
 try:
-    _import_('pysqlite3')
+    __import__('pysqlite3')  # Correct: use __import__
     sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 except ImportError:
     raise RuntimeError("Install pysqlite3-binary: pip install pysqlite3-binary")
@@ -23,14 +23,12 @@ from langchain_community.vectorstores import Chroma
 from langchain_groq import ChatGroq
 
 # 3. CONFIGURATION
-GROQ_API_KEY = "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"  # Replace if needed
+GROQ_API_KEY = "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"  # Updated API key
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-# Use your deployed DB folder name (e.g., "chroma_db_4")
 CHROMA_SETTINGS = {
     "persist_directory": "chroma_db_4",
     "collection_name": "resume_collection"
 }
-
 # --------------------------------------------------------------------------------
 # TWO SEPARATE PROMPTS:
 # --------------------------------------------------------------------------------
