@@ -326,7 +326,7 @@ def main():
                     vector_store = initialize_vector_store()
                     docs = vector_store.similarity_search(user_query, k=3)
                     context = "\n".join([d.page_content for d in docs])
-                    prompt = f"{SYSTEM_PROMPT}\nContext: {context}\nQuestion: {user_query}"
+                    prompt = f"Context: {context}\nQuestion: {user_query}"
                 else:
                     prompt = f"{SYSTEM_PROMPT}\nQuestion: {user_query}"
                 
