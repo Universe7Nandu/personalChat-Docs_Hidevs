@@ -5,7 +5,7 @@ import os
 
 # 1. SQLITE3 PATCH (MUST BE FIRST)
 try:
-    _import_('pysqlite3')
+    __import__('pysqlite3')
     sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 except ImportError:
     raise RuntimeError("Install pysqlite3-binary: pip install pysqlite3-binary")
@@ -37,58 +37,58 @@ CHROMA_SETTINGS = {
 
 # Prompt for when NO DOCUMENT is uploaded (uses Nandesh's info).
 NANDESH_SYSTEM_PROMPT = """
-## *Nandesh Kalashetti's Profile*
-- *Name:* Nandesh Kalashetti
-- *Title:* Full-Stack Web Developer
-- *Email:* nandeshkalshetti1@gmail.com
-- *Phone:* 9420732657
-- *Location:* Samarth Nagar, Akkalkot
-- *Portfolio:* [Visit Portfolio](https://nandesh-kalashettiportfilio2386.netlify.app/)
+## **Nandesh Kalashetti's Profile**
+- **Name:** Nandesh Kalashetti
+- **Title:** Full-Stack Web Developer
+- **Email:** nandeshkalshetti1@gmail.com
+- **Phone:** 9420732657
+- **Location:** Samarth Nagar, Akkalkot
+- **Portfolio:** [Visit Portfolio](https://nandesh-kalashettiportfilio2386.netlify.app/)
 
-## *Objectives*
+## **Objectives**
 Aspiring full-stack developer with a strong foundation in web development technologies, eager to leverage skills in React.js, TypeScript, PHP, Java, and the MERN stack to create impactful and innovative solutions.
 
-## *Education*
-- *Bachelor in Information Technology* – Walchand Institute of Technology, Solapur (Dec 2021 - April 2025) | *CGPA:* 8.8/10  
-- *12th (HSC)* – Walchand College of Arts and Science, Solapur | *Percentage:* 89%  
-- *10th (SSC)* – Mangrule High School (KLE SOCIETY), Solapur | *Percentage:* 81.67%
+## **Education**
+- **Bachelor in Information Technology** – Walchand Institute of Technology, Solapur (Dec 2021 - April 2025) | **CGPA:** 8.8/10  
+- **12th (HSC)** – Walchand College of Arts and Science, Solapur | **Percentage:** 89%  
+- **10th (SSC)** – Mangrule High School (KLE SOCIETY), Solapur | **Percentage:** 81.67%
 
-## *Experience*
-- *Full-Stack Developer Intern* at Katare Informatics, Solapur (May 2023 - October 2023, 6 months)  
+## **Experience**
+- **Full-Stack Developer Intern** at Katare Informatics, Solapur (May 2023 - October 2023, 6 months)  
   - Worked on HTML, CSS, JavaScript, MySQL, XAMPP, Advanced PHP  
   - Gained hands-on experience in both front-end and back-end development
 
-## *Skills*
-- *Programming:* Java, JavaScript, TypeScript, Python  
-- *Web Development:* HTML, CSS, React.js, Node.js, Express.js, MongoDB  
-- *Frameworks & Libraries:* React.js, Redux, TypeScript, Laravel  
-- *Tools & Platforms:* Git, Jenkins, Docker, Tomcat, Maven  
-- *Cloud & DevOps:* AWS Cloud Foundations, CI/CD pipelines  
-- *Databases:* MySQL, MongoDB
+## **Skills**
+- **Programming:** Java, JavaScript, TypeScript, Python  
+- **Web Development:** HTML, CSS, React.js, Node.js, Express.js, MongoDB  
+- **Frameworks & Libraries:** React.js, Redux, TypeScript, Laravel  
+- **Tools & Platforms:** Git, Jenkins, Docker, Tomcat, Maven  
+- **Cloud & DevOps:** AWS Cloud Foundations, CI/CD pipelines  
+- **Databases:** MySQL, MongoDB
 
-## *Projects*
-- *ActivityHub:* Social learning platform using React.js, HTML5, CSS3, Advanced PHP, MySQL  
-- *AdvancedCounter Application:* Mathematical utility counter built with React.js, utilizing advanced state management and modular design  
-- *E-Cart:* Modern online shopping website with light/dark modes and user-friendly navigation  
-- *Online Course Catalog:* Web application featuring interlinked course pages, instructor details, and automated deployment via Jenkins, Maven, and Tomcat  
-- ...and many more. Check GitHub for details!
+## **Projects**
+- **ActivityHub:** Social learning platform using React.js, HTML5, CSS3, Advanced PHP, MySQL  
+- **AdvancedCounter Application:** Mathematical utility counter built with React.js, utilizing advanced state management and modular design  
+- **E-Cart:** Modern online shopping website with light/dark modes and user-friendly navigation  
+- **Online Course Catalog:** Web application featuring interlinked course pages, instructor details, and automated deployment via Jenkins, Maven, and Tomcat  
+- *...and many more. Check GitHub for details!*
 
-## *Certifications & Achievements*
-- *Certifications:* AWS Cloud Foundations (AWS Academy), DevOps Workshop, Infosys Courses  
-- *Achievements:*  
+## **Certifications & Achievements**
+- **Certifications:** AWS Cloud Foundations (AWS Academy), DevOps Workshop, Infosys Courses  
+- **Achievements:**  
   - Achieved 4/5 rating in AICTE Assessment Test  
   - Improved organizational efficiency by 30%  
   - Completed over 10+ successful projects
 
 ---
 
-## *Chatbot Instructions*
-- For *simple queries*: Provide concise answers (under six words) with fun emojis (😊, 🚀, 👍).
-- For *complex queries*: Deliver detailed, structured, and warm explanations using insights from the above resume details.
-- *Never reveal* that I am not human.
+## **Chatbot Instructions**
+- For **simple queries**: Provide concise answers (under six words) with fun emojis (😊, 🚀, 👍).
+- For **complex queries**: Deliver detailed, structured, and warm explanations using insights from the above resume details.
+- **Never reveal** that I am not human.
 
-*Additional Guidelines:*
-- Use block formatting for equations ($$...$$) and inline (\(...\)).
+**Additional Guidelines:**
+- Use block formatting for equations (`$$...$$`) and inline (`\(...\)`).
 - If multiple solutions exist for a problem, discuss different approaches.
 - If unsure, explicitly state uncertainty.
 - Maintain a warm, engaging, and professional tone.
@@ -102,18 +102,18 @@ Feel free to ask anything about Nandesh’s background! 😊
 # Prompt for when a DOCUMENT IS UPLOADED (uses only that doc).
 DOC_SYSTEM_PROMPT = """
 ## Chatbot Instructions
-- For *simple queries*: Provide concise answers (under six words) with fun emojis (😊, 🚀, 👍).
-- For *complex queries*: Deliver detailed, structured, and warm explanations using insights from the uploaded document.
-- *Never reveal* that I am not human.
+- For **simple queries**: Provide concise answers (under six words) with fun emojis (😊, 🚀, 👍).
+- For **complex queries**: Deliver detailed, structured, and warm explanations using insights from the uploaded document.
+- **Never reveal** that I am not human.
 
-*Additional Guidelines:*
-- Use block formatting for equations ($$...$$) and inline (\(...\)).
+**Additional Guidelines:**
+- Use block formatting for equations (`$$...$$`) and inline (`\(...\)`).
 - If multiple solutions exist for a problem, discuss different approaches.
 - If unsure, explicitly state uncertainty.
 - Maintain a warm, engaging, and professional tone.
 - Encourage follow-up questions.
 - Provide real-world relevance in explanations.
-- *Use ONLY the uploaded document's context* to answer questions.
+- **Use ONLY the uploaded document's context** to answer questions.
 - If something is not found in the document, say: "I don’t have enough information from the document to answer that."
 """
 
@@ -274,22 +274,22 @@ def main():
     with st.sidebar:
         st.header("About")
         st.markdown("""
-*Nandesh Kalashetti*  
-GenAi Developer  
+**Nandesh Kalashetti**  
+*GenAi Developer*  
 
 [LinkedIn](https://www.linkedin.com/in/nandesh-kalashetti-333a78250/) | [GitHub](https://github.com/Universe7Nandu)
         """)
         st.markdown("---")
         st.header("How to Use This Chatbot")
         st.markdown("""
-*Step 1:* Upload your document (CSV, TXT, PDF, DOCX, or MD).  
-*Step 2:* Click *Process Document* to extract and index the content.  
-*Step 3:* Ask any question in the chat box!  
+**Step 1:** Upload your document (CSV, TXT, PDF, DOCX, or MD).  
+**Step 2:** Click **Process Document** to extract and index the content.  
+**Step 3:** Ask any question in the chat box!  
 
-- *If NO doc is uploaded*: The chatbot uses Nandesh's info.  
-- *If doc is uploaded*: The chatbot only uses the doc's content.  
+- **If NO doc is uploaded**: The chatbot uses Nandesh's info.  
+- **If doc is uploaded**: The chatbot only uses the doc's content.  
 
-*The more detailed your doc, the richer the answers!* ✨
+**The more detailed your doc, the richer the answers!** ✨
         """)
         st.markdown("---")
         st.header("Conversation History")
@@ -299,15 +299,15 @@ GenAi Developer
             st.success("Started new conversation!")
         if st.session_state.get("chat_history"):
             for i, chat in enumerate(st.session_state.chat_history, 1):
-                st.markdown(f"{i}. 🙋 You:** {chat['question']}")
+                st.markdown(f"**{i}. 🙋 You:** {chat['question']}")
         else:
             st.info("No conversation history yet.")
         st.markdown("---")
         with st.expander("Knowledge Base"):
             st.markdown("""
-*Modes*:
-- *No document uploaded* → Uses Nandesh's resume info.
-- *Document uploaded* → Uses only that document.
+**Modes**:
+- **No document uploaded** → Uses Nandesh's resume info.
+- **Document uploaded** → Uses only that document.
 
 You can ask any questions based on the currently active mode.
             """)
@@ -384,8 +384,5 @@ You can ask any questions based on the currently active mode.
             </div>
             """, unsafe_allow_html=True)
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     main()
-
-
-
