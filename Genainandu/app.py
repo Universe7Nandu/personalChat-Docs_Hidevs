@@ -5,7 +5,7 @@ import os
 
 # 1. SQLITE3 PATCH (MUST BE FIRST)
 try:
-    __import__('pysqlite3')
+    _import_('pysqlite3')
     sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 except ImportError:
     raise RuntimeError("Install pysqlite3-binary: pip install pysqlite3-binary")
@@ -23,91 +23,97 @@ from langchain_community.vectorstores import Chroma
 from langchain_groq import ChatGroq
 
 # 3. CONFIGURATION
-# Replace with your actual Groq API key
-GROQ_API_KEY = "gsk_YOUR_GROQ_API_KEY_HERE"
+GROQ_API_KEY = "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"  # Replace if needed
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+# Use your deployed DB folder name (e.g., "chroma_db_4")
+CHROMA_SETTINGS = {
+    "persist_directory": "chroma_db_4",
+    "collection_name": "resume_collection"
+}
 
 # --------------------------------------------------------------------------------
 # TWO SEPARATE PROMPTS:
 # --------------------------------------------------------------------------------
 
-# Prompt used when NO DOCUMENT is uploaded (Nandesh’s info).
+# Prompt for when NO DOCUMENT is uploaded (uses Nandesh's info).
 NANDESH_SYSTEM_PROMPT = """
-## **Nandesh Kalashetti's Profile**
-- **Name:** Nandesh Kalashetti
-- **Title:** Full-Stack Web Developer
-- **Email:** nandeshkalshetti1@gmail.com
-- **Phone:** 9420732657
-- **Location:** Samarth Nagar, Akkalkot
-- **Portfolio:** [Visit Portfolio](https://nandesh-kalashettiportfilio2386.netlify.app/)
+## *Nandesh Kalashetti's Profile*
+- *Name:* Nandesh Kalashetti
+- *Title:* Full-Stack Web Developer
+- *Email:* nandeshkalshetti1@gmail.com
+- *Phone:* 9420732657
+- *Location:* Samarth Nagar, Akkalkot
+- *Portfolio:* [Visit Portfolio](https://nandesh-kalashettiportfilio2386.netlify.app/)
 
-## **Objectives**
+## *Objectives*
 Aspiring full-stack developer with a strong foundation in web development technologies, eager to leverage skills in React.js, TypeScript, PHP, Java, and the MERN stack to create impactful and innovative solutions.
 
-## **Education**
-- **Bachelor in Information Technology** – Walchand Institute of Technology, Solapur (Dec 2021 - April 2025) | **CGPA:** 8.8/10  
-- **12th (HSC)** – Walchand College of Arts and Science, Solapur | **Percentage:** 89%  
-- **10th (SSC)** – Mangrule High School (KLE SOCIETY), Solapur | **Percentage:** 81.67%
+## *Education*
+- *Bachelor in Information Technology* – Walchand Institute of Technology, Solapur (Dec 2021 - April 2025) | *CGPA:* 8.8/10  
+- *12th (HSC)* – Walchand College of Arts and Science, Solapur | *Percentage:* 89%  
+- *10th (SSC)* – Mangrule High School (KLE SOCIETY), Solapur | *Percentage:* 81.67%
 
-## **Experience**
-- **Full-Stack Developer Intern** at Katare Informatics, Solapur (May 2023 - October 2023, 6 months)  
+## *Experience*
+- *Full-Stack Developer Intern* at Katare Informatics, Solapur (May 2023 - October 2023, 6 months)  
   - Worked on HTML, CSS, JavaScript, MySQL, XAMPP, Advanced PHP  
   - Gained hands-on experience in both front-end and back-end development
 
-## **Skills**
-- **Programming:** Java, JavaScript, TypeScript, Python  
-- **Web Development:** HTML, CSS, React.js, Node.js, Express.js, MongoDB  
-- **Frameworks & Libraries:** React.js, Redux, TypeScript, Laravel  
-- **Tools & Platforms:** Git, Jenkins, Docker, Tomcat, Maven  
-- **Cloud & DevOps:** AWS Cloud Foundations, CI/CD pipelines  
-- **Databases:** MySQL, MongoDB
+## *Skills*
+- *Programming:* Java, JavaScript, TypeScript, Python  
+- *Web Development:* HTML, CSS, React.js, Node.js, Express.js, MongoDB  
+- *Frameworks & Libraries:* React.js, Redux, TypeScript, Laravel  
+- *Tools & Platforms:* Git, Jenkins, Docker, Tomcat, Maven  
+- *Cloud & DevOps:* AWS Cloud Foundations, CI/CD pipelines  
+- *Databases:* MySQL, MongoDB
 
-## **Projects**
-- **ActivityHub:** Social learning platform using React.js, HTML5, CSS3, Advanced PHP, MySQL  
-- **AdvancedCounter Application:** Mathematical utility counter built with React.js, utilizing advanced state management and modular design  
-- **E-Cart:** Modern online shopping website with light/dark modes and user-friendly navigation  
-- **Online Course Catalog:** Web application featuring interlinked course pages, instructor details, and automated deployment via Jenkins, Maven, and Tomcat  
-- *...and many more. Check GitHub for details!*
+## *Projects*
+- *ActivityHub:* Social learning platform using React.js, HTML5, CSS3, Advanced PHP, MySQL  
+- *AdvancedCounter Application:* Mathematical utility counter built with React.js, utilizing advanced state management and modular design  
+- *E-Cart:* Modern online shopping website with light/dark modes and user-friendly navigation  
+- *Online Course Catalog:* Web application featuring interlinked course pages, instructor details, and automated deployment via Jenkins, Maven, and Tomcat  
+- ...and many more. Check GitHub for details!
 
-## **Certifications & Achievements**
-- **Certifications:** AWS Cloud Foundations (AWS Academy), DevOps Workshop, Infosys Courses  
-- **Achievements:**  
+## *Certifications & Achievements*
+- *Certifications:* AWS Cloud Foundations (AWS Academy), DevOps Workshop, Infosys Courses  
+- *Achievements:*  
   - Achieved 4/5 rating in AICTE Assessment Test  
   - Improved organizational efficiency by 30%  
   - Completed over 10+ successful projects
 
 ---
 
-## **Chatbot Instructions**
-- For **simple queries**: Provide concise answers (under six words) with fun emojis (😊, 🚀, 👍).
-- For **complex queries**: Deliver detailed, structured, and warm explanations using insights from the above resume details.
-- **Never reveal** that I am not human.
+## *Chatbot Instructions*
+- For *simple queries*: Provide concise answers (under six words) with fun emojis (😊, 🚀, 👍).
+- For *complex queries*: Deliver detailed, structured, and warm explanations using insights from the above resume details.
+- *Never reveal* that I am not human.
 
-**Additional Guidelines:**
-- Use block formatting for equations (`$$...$$`) and inline (`\(...\)`).
+*Additional Guidelines:*
+- Use block formatting for equations ($$...$$) and inline (\(...\)).
 - If multiple solutions exist for a problem, discuss different approaches.
 - If unsure, explicitly state uncertainty.
 - Maintain a warm, engaging, and professional tone.
 - Encourage follow-up questions.
 - Provide real-world relevance in explanations.
-- Use the above context about Nandesh's background whenever relevant.
+- Leverage the above context about Nandesh's background whenever relevant.
+
+Feel free to ask anything about Nandesh’s background! 😊
 """
 
-# Prompt used when a DOCUMENT IS UPLOADED (use only that doc).
+# Prompt for when a DOCUMENT IS UPLOADED (uses only that doc).
 DOC_SYSTEM_PROMPT = """
 ## Chatbot Instructions
-- For **simple queries**: Provide concise answers (under six words) with fun emojis (😊, 🚀, 👍).
-- For **complex queries**: Deliver detailed, structured, and warm explanations using insights from the uploaded document.
-- **Never reveal** that I am not human.
+- For *simple queries*: Provide concise answers (under six words) with fun emojis (😊, 🚀, 👍).
+- For *complex queries*: Deliver detailed, structured, and warm explanations using insights from the uploaded document.
+- *Never reveal* that I am not human.
 
-**Additional Guidelines:**
-- Use block formatting for equations (`$$...$$`) and inline (`\(...\)`).
+*Additional Guidelines:*
+- Use block formatting for equations ($$...$$) and inline (\(...\)).
 - If multiple solutions exist for a problem, discuss different approaches.
 - If unsure, explicitly state uncertainty.
 - Maintain a warm, engaging, and professional tone.
 - Encourage follow-up questions.
 - Provide real-world relevance in explanations.
-- **Use ONLY the uploaded document's context** to answer questions.
+- *Use ONLY the uploaded document's context* to answer questions.
 - If something is not found in the document, say: "I don’t have enough information from the document to answer that."
 """
 
@@ -116,18 +122,21 @@ nest_asyncio.apply()
 
 # 5. CORE FUNCTIONS
 
+def initialize_vector_store():
+    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+    return Chroma(
+        persist_directory=CHROMA_SETTINGS["persist_directory"],
+        embedding_function=embeddings,
+        collection_name=CHROMA_SETTINGS["collection_name"]
+    )
+
 def process_document(file):
-    """
-    Extracts text from the uploaded file.
-    NOTE: If the PDF is a scanned image, PyPDF2 won't extract text.
-    You may need OCR (e.g., pytesseract) for image-based PDFs.
-    """
+    """Process a document (PDF, CSV, TXT, DOCX, MD) and return its text."""
     ext = os.path.splitext(file.name)[1].lower()
     try:
         if ext == ".pdf":
             pdf = PdfReader(file)
-            # Extract text from each page
-            return "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
+            return "\n".join(page.extract_text() for page in pdf.pages)
         elif ext == ".csv":
             df = pd.read_csv(file)
             return df.to_csv(index=False)
@@ -145,23 +154,8 @@ def process_document(file):
         return ""
 
 def chunk_text(text):
-    # Splits the text into smaller chunks for embedding & retrieval
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     return splitter.split_text(text)
-
-def embed_text_in_memory(text):
-    """
-    Creates an in-memory Chroma vector store with the chunked text.
-    Returns the vector store object.
-    """
-    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
-    vector_store = Chroma(
-        collection_name="temp_collection",  # ephemeral
-        embedding_function=embeddings
-    )
-    chunks = chunk_text(text)
-    vector_store.add_texts(chunks)
-    return vector_store
 
 # 6. STREAMLIT UI
 
@@ -227,7 +221,7 @@ def main():
     .chat-box:hover {
         transform: scale(1.01);
     }
-    /* User message: fancy gradient */
+    /* User question: fancy gradient with extra emoji flair */
     .user-message {
         font-weight: bold;
         margin-bottom: 10px;
@@ -253,7 +247,7 @@ def main():
         border: none;
         border-radius: 8px;
         padding: 10px 20px;
-        color: #000;
+        color: #black;
         font-weight: 600;
         transition: transform 0.2s, box-shadow 0.2s;
     }
@@ -270,54 +264,52 @@ def main():
     .stTextInput>div>div>input:focus {
         border-color: #ff7e5f;
     }
+    .process-btn {
+        margin-top: 10px;
+    }
     </style>
     """, unsafe_allow_html=True)
     
-    # Sidebar: About, How to Use, Conversation History, Knowledge Base
+    # Sidebar: About, How to Use, Conversation History, Knowledge Base Expander
     with st.sidebar:
         st.header("About")
         st.markdown("""
-**Nandesh Kalashetti**  
-*GenAi Developer*  
+*Nandesh Kalashetti*  
+GenAi Developer  
 
 [LinkedIn](https://www.linkedin.com/in/nandesh-kalashetti-333a78250/) | [GitHub](https://github.com/Universe7Nandu)
         """)
         st.markdown("---")
-        
-        st.header("How to Use")
+        st.header("How to Use This Chatbot")
         st.markdown("""
-1. **No Document?**  
-   - The bot uses Nandesh's info by default.
-2. **Have a Document?**  
-   - Upload & click "Process Document". The bot then uses **only** your doc for answers.
-3. **Ask Questions**  
-   - Type in the "Your message" box.
+*Step 1:* Upload your document (CSV, TXT, PDF, DOCX, or MD).  
+*Step 2:* Click *Process Document* to extract and index the content.  
+*Step 3:* Ask any question in the chat box!  
 
-**Note**: If your PDF is a scanned image, you won't get text. Consider using OCR tools first.
+- *If NO doc is uploaded*: The chatbot uses Nandesh's info.  
+- *If doc is uploaded*: The chatbot only uses the doc's content.  
+
+*The more detailed your doc, the richer the answers!* ✨
         """)
         st.markdown("---")
-        
         st.header("Conversation History")
         if st.button("New Chat", key="new_chat"):
             st.session_state.chat_history = []
             st.session_state.document_processed = False
-            st.session_state.vector_store = None
             st.success("Started new conversation!")
-        
         if st.session_state.get("chat_history"):
             for i, chat in enumerate(st.session_state.chat_history, 1):
-                st.markdown(f"**{i}. 🙋 You:** {chat['question']}")
+                st.markdown(f"{i}. 🙋 You:** {chat['question']}")
         else:
             st.info("No conversation history yet.")
-        
         st.markdown("---")
         with st.expander("Knowledge Base"):
             st.markdown("""
-**Two Modes**:
-- **No Document**: Uses Nandesh's resume info.
-- **Document Uploaded**: Uses only that doc.
+*Modes*:
+- *No document uploaded* → Uses Nandesh's resume info.
+- *Document uploaded* → Uses only that document.
 
-All embeddings are stored **in-memory** (no persistent DB), so old data won't mix.
+You can ask any questions based on the currently active mode.
             """)
     
     # Main Header
@@ -328,55 +320,49 @@ All embeddings are stored **in-memory** (no persistent DB), so old data won't mi
     
     # Left Column: Document Upload & Processing
     with col_left:
-        st.subheader("Document Upload & Processing")
-        
-        uploaded_file = st.file_uploader(
-            "Upload Document (CSV/TXT/PDF/DOCX/MD)", 
-            type=["csv", "txt", "pdf", "docx", "md"], 
-            key="knowledge_doc"
-        )
-        
+        st.subheader("Knowledge Base Upload & Processing")
+        uploaded_file = st.file_uploader("Upload Document (CSV/TXT/PDF/DOCX/MD)", 
+                                         type=["csv", "txt", "pdf", "docx", "md"], 
+                                         key="knowledge_doc")
         if uploaded_file:
+            st.session_state.uploaded_document = uploaded_file
             if "document_processed" not in st.session_state:
                 st.session_state.document_processed = False
-            
             if not st.session_state.document_processed:
                 if st.button("Process Document", key="process_doc", help="Extract and index document content"):
                     with st.spinner("Processing document..."):
                         text = process_document(uploaded_file)
-                        if text.strip():
-                            # Create an in-memory vector store
-                            st.session_state.vector_store = embed_text_in_memory(text)
+                        if text:
+                            chunks = chunk_text(text)
+                            vector_store = initialize_vector_store()
+                            vector_store.add_texts(chunks)
                             st.session_state.document_processed = True
-                            st.success("Document processed and embedded in-memory ✅")
-                        else:
-                            st.error("No text extracted. Possibly a scanned PDF or empty file.")
+                            st.success(f"Processed {len(chunks)} document sections ✅")
             else:
-                st.info("Document already processed!")
+                st.info("Document processed successfully!")
         else:
-            st.info("No document uploaded. The bot will use Nandesh's info by default.")
+            st.info("Upload a document to override Nandesh's info with your own content.")
     
     # Right Column: Chat Interface
     with col_right:
         st.subheader("Chat with AI")
-        
         if "chat_history" not in st.session_state:
             st.session_state.chat_history = []
         
         user_query = st.text_input("Your message:")
-        
         if user_query:
             with st.spinner("Generating response..."):
-                # If we have a processed doc and a vector store, use doc-based prompt
-                if st.session_state.get("document_processed", False) and st.session_state.get("vector_store"):
-                    docs = st.session_state["vector_store"].similarity_search(user_query, k=3)
+                # Check if a document is processed:
+                if st.session_state.get("document_processed", False):
+                    # Use only the uploaded doc
+                    vector_store = initialize_vector_store()
+                    docs = vector_store.similarity_search(user_query, k=3)
                     context = "\n".join([d.page_content for d in docs])
                     prompt = f"{DOC_SYSTEM_PROMPT}\nContext:\n{context}\nQuestion: {user_query}"
                 else:
                     # Use Nandesh's info
                     prompt = f"{NANDESH_SYSTEM_PROMPT}\nQuestion: {user_query}"
                 
-                # Call the ChatGroq LLM
                 llm = ChatGroq(
                     temperature=0.7,
                     groq_api_key=GROQ_API_KEY,
@@ -384,7 +370,6 @@ All embeddings are stored **in-memory** (no persistent DB), so old data won't mi
                 )
                 response = asyncio.run(llm.ainvoke([{"role": "user", "content": prompt}]))
                 
-                # Store the Q&A in chat history
                 st.session_state.chat_history.append({
                     "question": user_query,
                     "answer": response.content
@@ -399,5 +384,9 @@ All embeddings are stored **in-memory** (no persistent DB), so old data won't mi
             </div>
             """, unsafe_allow_html=True)
 
-if __name__ == "__main__":
+if _name_ == "_main_":
     main()
+
+
+
+fresh code updated successs
