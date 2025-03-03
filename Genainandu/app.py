@@ -382,5 +382,5 @@ You can ask any questions based on the currently active mode.
             </div>
             """, unsafe_allow_html=True)
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     main()
