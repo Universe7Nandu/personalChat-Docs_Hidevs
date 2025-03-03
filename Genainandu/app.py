@@ -4,6 +4,7 @@ import sys
 import os
 
 # 1. SQLITE3 PATCH (MUST BE FIRST)
+# If this causes errors, either install pysqlite3-binary or remove these lines.
 try:
     __import__('pysqlite3')
     sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
@@ -23,19 +24,14 @@ from langchain_community.vectorstores import Chroma
 from langchain_groq import ChatGroq
 
 # 3. CONFIGURATION
-GROQ_API_KEY = "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"  # Replace if needed
+GROQ_API_KEY = "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"  # Replace with your own
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-# Use your deployed DB folder name (e.g., "chroma_db_4")
-CHROMA_SETTINGS = {
-    "persist_directory": "chroma_db_4",
-    "collection_name": "resume_collection"
-}
 
 # --------------------------------------------------------------------------------
-# TWO SEPARATE PROMPTS:
+# PROMPTS
 # --------------------------------------------------------------------------------
 
-# Prompt for when NO DOCUMENT is uploaded (uses Nandesh's info).
+# Prompt used when NO DOCUMENT is uploaded (Nandesh’s info).
 NANDESH_SYSTEM_PROMPT = """
 ## *Nandesh Kalashetti's Profile*
 - *Name:* Nandesh Kalashetti
@@ -99,7 +95,7 @@ Aspiring full-stack developer with a strong foundation in web development techno
 Feel free to ask anything about Nandesh’s background! 😊
 """
 
-# Prompt for when a DOCUMENT IS UPLOADED (uses only that doc).
+# Prompt used when a DOCUMENT IS UPLOADED (use only that doc).
 DOC_SYSTEM_PROMPT = """
 ## Chatbot Instructions
 - For *simple queries*: Provide concise answers (under six words) with fun emojis (😊, 🚀, 👍).
@@ -122,21 +118,17 @@ nest_asyncio.apply()
 
 # 5. CORE FUNCTIONS
 
-def initialize_vector_store():
-    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
-    return Chroma(
-        persist_directory=CHROMA_SETTINGS["persist_directory"],
-        embedding_function=embeddings,
-        collection_name=CHROMA_SETTINGS["collection_name"]
-    )
-
 def process_document(file):
-    """Process a document (PDF, CSV, TXT, DOCX, MD) and return its text."""
+    """
+    Extract text from the uploaded file.
+    NOTE: If the PDF is a scanned image (no selectable text),
+    PyPDF2 won't extract text. In that case, you'll get an empty string.
+    """
     ext = os.path.splitext(file.name)[1].lower()
     try:
         if ext == ".pdf":
             pdf = PdfReader(file)
-            return "\n".join(page.extract_text() for page in pdf.pages)
+            return "\n".join(page.extract_text() or "" for page in pdf.pages)
         elif ext == ".csv":
             df = pd.read_csv(file)
             return df.to_csv(index=False)
@@ -154,8 +146,25 @@ def process_document(file):
         return ""
 
 def chunk_text(text):
+    """
+    Splits the text into smaller chunks for embedding & retrieval.
+    """
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     return splitter.split_text(text)
+
+def create_vector_store(text):
+    """
+    Create an in-memory Chroma vector store from the given text.
+    This ensures no old data persists across sessions.
+    """
+    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+    vector_store = Chroma(
+        collection_name="temp_collection",  # ephemeral
+        embedding_function=embeddings
+    )
+    chunks = chunk_text(text)
+    vector_store.add_texts(chunks)
+    return vector_store
 
 # 6. STREAMLIT UI
 
@@ -221,7 +230,7 @@ def main():
     .chat-box:hover {
         transform: scale(1.01);
     }
-    /* User question: fancy gradient with extra emoji flair */
+    /* User message: fancy gradient */
     .user-message {
         font-weight: bold;
         margin-bottom: 10px;
@@ -247,7 +256,7 @@ def main():
         border: none;
         border-radius: 8px;
         padding: 10px 20px;
-        color: #black;
+        color: #000;
         font-weight: 600;
         transition: transform 0.2s, box-shadow 0.2s;
     }
@@ -280,36 +289,45 @@ GenAi Developer
 [LinkedIn](https://www.linkedin.com/in/nandesh-kalashetti-333a78250/) | [GitHub](https://github.com/Universe7Nandu)
         """)
         st.markdown("---")
+        
         st.header("How to Use This Chatbot")
         st.markdown("""
-*Step 1:* Upload your document (CSV, TXT, PDF, DOCX, or MD).  
-*Step 2:* Click *Process Document* to extract and index the content.  
-*Step 3:* Ask any question in the chat box!  
+1. **No Document?**  
+   - The bot uses Nandesh's info by default.
 
-- *If NO doc is uploaded*: The chatbot uses Nandesh's info.  
-- *If doc is uploaded*: The chatbot only uses the doc's content.  
+2. **Have a Document?**  
+   - Upload it (CSV, TXT, PDF, DOCX, or MD).
+   - Click "Process Document" to extract and index it.
+   - The bot then **only** uses the uploaded document's data.
 
-*The more detailed your doc, the richer the answers!* ✨
+3. **Ask Questions**  
+   - Type your question in "Your message" and press Enter.
+
+**Note**: If your PDF is scanned (image-based), no text will be extracted.
         """)
         st.markdown("---")
+        
         st.header("Conversation History")
         if st.button("New Chat", key="new_chat"):
             st.session_state.chat_history = []
             st.session_state.document_processed = False
+            st.session_state.vector_store = None
             st.success("Started new conversation!")
+        
         if st.session_state.get("chat_history"):
             for i, chat in enumerate(st.session_state.chat_history, 1):
                 st.markdown(f"{i}. 🙋 You: {chat['question']}")
         else:
             st.info("No conversation history yet.")
+        
         st.markdown("---")
         with st.expander("Knowledge Base"):
             st.markdown("""
-*Modes*:
-- *No document uploaded* → Uses Nandesh's resume info.
-- *Document uploaded* → Uses only that document.
+**Modes**:
+- **No Document**: Uses Nandesh's info.
+- **Document**: Uses only the uploaded doc.
 
-You can ask any questions based on the currently active mode.
+All data is stored in memory only. No old data remains across sessions.
             """)
     
     # Main Header
@@ -320,49 +338,55 @@ You can ask any questions based on the currently active mode.
     
     # Left Column: Document Upload & Processing
     with col_left:
-        st.subheader("Knowledge Base Upload & Processing")
-        uploaded_file = st.file_uploader("Upload Document (CSV/TXT/PDF/DOCX/MD)", 
-                                         type=["csv", "txt", "pdf", "docx", "md"], 
-                                         key="knowledge_doc")
+        st.subheader("Document Upload & Processing")
+        
+        uploaded_file = st.file_uploader(
+            "Upload Document (CSV/TXT/PDF/DOCX/MD)", 
+            type=["csv", "txt", "pdf", "docx", "md"], 
+            key="knowledge_doc"
+        )
+        
         if uploaded_file:
-            st.session_state.uploaded_document = uploaded_file
             if "document_processed" not in st.session_state:
                 st.session_state.document_processed = False
+            
             if not st.session_state.document_processed:
                 if st.button("Process Document", key="process_doc", help="Extract and index document content"):
                     with st.spinner("Processing document..."):
                         text = process_document(uploaded_file)
-                        if text:
-                            chunks = chunk_text(text)
-                            vector_store = initialize_vector_store()
-                            vector_store.add_texts(chunks)
+                        if text.strip():
+                            # Create ephemeral in-memory store for THIS doc only
+                            st.session_state.vector_store = create_vector_store(text)
                             st.session_state.document_processed = True
-                            st.success(f"Processed {len(chunks)} document sections ✅")
+                            st.success("Document processed successfully! ✅")
+                        else:
+                            st.error("No text extracted. Possibly a scanned PDF or empty file.")
             else:
-                st.info("Document processed successfully!")
+                st.info("Document already processed. Ready for questions!")
         else:
-            st.info("Upload a document to override Nandesh's info with your own content.")
+            st.info("No document uploaded. The bot will use Nandesh's info by default.")
     
     # Right Column: Chat Interface
     with col_right:
         st.subheader("Chat with AI")
+        
         if "chat_history" not in st.session_state:
             st.session_state.chat_history = []
         
         user_query = st.text_input("Your message:")
+        
         if user_query:
             with st.spinner("Generating response..."):
-                # Check if a document is processed:
-                if st.session_state.get("document_processed", False):
-                    # Use only the uploaded doc
-                    vector_store = initialize_vector_store()
-                    docs = vector_store.similarity_search(user_query, k=3)
+                # If we have a processed doc & vector store, use doc-based context
+                if st.session_state.get("document_processed") and st.session_state.get("vector_store"):
+                    docs = st.session_state["vector_store"].similarity_search(user_query, k=3)
                     context = "\n".join([d.page_content for d in docs])
                     prompt = f"{DOC_SYSTEM_PROMPT}\nContext:\n{context}\nQuestion: {user_query}"
                 else:
                     # Use Nandesh's info
                     prompt = f"{NANDESH_SYSTEM_PROMPT}\nQuestion: {user_query}"
                 
+                # Call the ChatGroq LLM
                 llm = ChatGroq(
                     temperature=0.7,
                     groq_api_key=GROQ_API_KEY,
@@ -370,6 +394,7 @@ You can ask any questions based on the currently active mode.
                 )
                 response = asyncio.run(llm.ainvoke([{"role": "user", "content": prompt}]))
                 
+                # Store the Q&A in chat history
                 st.session_state.chat_history.append({
                     "question": user_query,
                     "answer": response.content
