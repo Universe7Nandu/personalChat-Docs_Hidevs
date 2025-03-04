@@ -8,16 +8,23 @@ from langchain_groq import ChatGroq
 # 1. CONFIGURATION
 GROQ_API_KEY = "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"
 
-# 2. SYSTEM PROMPT (STRONG, STEP-BY-STEP, LaTeX-FOCUSED)
+# 2. STRONG, STRUCTURED SYSTEM PROMPT
+#    - Enforces line-by-line steps, labeled as Step 1, Step 2, etc.
+#    - Uses LaTeX for each step as needed.
+#    - Concludes with a "Final Answer" in LaTeX.
 DEFAULT_SYSTEM_PROMPT = """
-## Strong Mathematics Assistant
-You are an advanced mathematics assistant with a strong emphasis on step-by-step solutions. 
-When a user asks a question, you must:
-1. Provide a clear step-by-step derivation or explanation.
-2. Use LaTeX formatting for all math expressions (surrounded by $$).
-3. Provide the final answer in LaTeX as well.
-4. Maintain a professional, instructive tone.
-5. If possible, give additional insights or alternative methods.
+You are a strong mathematics assistant. When the user asks a question, do the following:
+1. Provide a clear, step-by-step solution, labeling each step as "Step 1", "Step 2", etc.
+2. In each step, if you use any math expressions, enclose them in LaTeX: $$ ... $$.
+3. Conclude with a section labeled "Final Answer" that contains the result in LaTeX.
+4. Maintain a professional and instructive tone.
+
+Example Format:
+Step 1: Explanation here with $$ \\text{LaTeX} $$ if needed.
+Step 2: Explanation here with $$ \\text{LaTeX} $$ if needed.
+...
+Final Answer:
+$$ \\text{Answer in LaTeX form} $$
 
 Question: {user_query}
 """
@@ -25,7 +32,6 @@ Question: {user_query}
 # 3. APPLY ASYNC PATCH
 nest_asyncio.apply()
 
-# 4. MAIN APPLICATION FUNCTION
 def main():
     st.set_page_config(page_title="Strong Mathematics Chatbot", layout="wide")
     
@@ -92,19 +98,18 @@ def main():
     .stChatInput {
         position: sticky;
         bottom: 0;
-        background: #f7f9fb;
-        color:black;
+        background: #000000 !important; /* black background for the input area */
         border-radius: 12px;
         padding: 10px;
         margin-top: 20px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     .stChatInput>div>div>input {
-        color: #2c3e50;
+        background-color: #000000 !important; /* black input box */
+        color: #ffffff !important;           /* white text */
         font-weight: 500;
         border-radius: 8px;
         border: 1px solid #bdc3c7;
-        background-color: #ffffff;
         padding: 10px;
     }
     .stChatInput>div>div>input:focus {
@@ -119,15 +124,16 @@ def main():
         st.markdown("""
 **Strong Mathematics Assistant**  
 - Step-by-step solutions  
-- LaTeX-formatted derivations  
+- Line-by-line LaTeX usage  
 - Professional & instructive tone
         """)
         st.markdown("---")
         st.header("How to Use")
         st.markdown("""
-1. **Ask** a math question in the chat box.  
-2. **Receive** a detailed, line-by-line solution with LaTeX.  
-3. **Follow up** for clarifications or alternative methods.
+1. **Ask** a math question in the chat box below.  
+2. **Receive** a step-by-step solution, labeled as Step 1, Step 2, etc.  
+3. **Check** the final answer in a clear LaTeX form.  
+4. **Use** "New Chat" to start fresh.
         """)
         st.markdown("---")
         st.header("Conversation History")
