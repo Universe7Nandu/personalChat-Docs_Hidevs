@@ -49,7 +49,7 @@ def main():
     .chat-container {
         max-width: 900px;
         margin: 40px auto;
-        background: #ffffff;
+        background: #BLACK;
         border-radius: 16px;
         padding: 25px;
         box-shadow: 0 8px 32px rgba(0,0,0,0.1);
