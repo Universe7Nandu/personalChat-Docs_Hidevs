@@ -99,6 +99,7 @@ def main():
         position: sticky;
         bottom: 0;
         background: #000000 !important; /* black background for the input area */
+        color:black;
         border-radius: 12px;
         padding: 10px;
         margin-top: 20px;
