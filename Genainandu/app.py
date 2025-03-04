@@ -93,6 +93,7 @@ def main():
         position: sticky;
         bottom: 0;
         background: #f7f9fb;
+        color:black;
         border-radius: 12px;
         padding: 10px;
         margin-top: 20px;
