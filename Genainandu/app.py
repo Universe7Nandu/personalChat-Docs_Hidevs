@@ -32,7 +32,11 @@ nest_asyncio.apply()
 def main():
     st.set_page_config(page_title="Strong Mathematics Chatbot", layout="wide")
 
-    # 4. NEW UI STYLING (from your provided CSS snippet)
+    # 4. BRAND-NEW UI STYLING
+    #    - Changed background gradient
+    #    - Updated chat container styles
+    #    - New colors for the sidebar
+    #    - Input box with a different look
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
@@ -40,62 +44,51 @@ def main():
         font-family: 'Poppins', sans-serif;
     }
     body {
-        background: linear-gradient(135deg, #2c3e50, #bdc3c7);
+        /* A fresh, vibrant gradient background */
+        background: linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%);
         margin: 0; padding: 0;
     }
     header, footer { display: none; }
+
+    /* Main chat container */
     .chat-container {
         max-width: 900px;
         margin: 40px auto;
-        background: rgba(255,255,255,0.9);
+        background: rgba(255,255,255,0.85);
         border-radius: 16px;
         padding: 25px;
         box-shadow: 0 8px 32px rgba(0,0,0,0.2);
     }
+
+    /* Title and subtitle styling */
     .chat-title {
         text-align: center;
-        color: #2c3e50;
+        color: #333333;
         font-size: 2.4rem;
         font-weight: 600;
         margin-bottom: 5px;
     }
     .chat-subtitle {
         text-align: center;
-        color: #34495e;
+        color: #555555;
         margin-top: 0;
         margin-bottom: 20px;
         font-size: 1.1rem;
     }
-    .stChatInput {
-        position: sticky;
-        bottom: 0;
-        background: rgba(255,255,255,0.95);
-        backdrop-filter: blur(6px);
-        padding: 10px;
-        margin-top: 20px;
-        border-radius: 12px;
-    }
-    .stChatInput>div>div>input {
-        color: #2c3e50;
-        font-weight: 500;
-        border-radius: 8px;
-        border: 1px solid #bdc3c7;
-    }
-    .stChatInput>div>div>input:focus {
-        outline: 2px solid #2980b9;
-    }
+
+    /* Sidebar styling */
     [data-testid="stSidebar"] {
-        background: #2c3e50 !important;
+        background: #34495e !important;
         color: #ecf0f1 !important;
     }
     [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
-        color: #e74c3c !important;
+        color: #e67e22 !important;
     }
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] label {
         color: #ecf0f1 !important;
     }
     [data-testid="stSidebar"] .stButton>button {
-        background: #e74c3c !important;
+        background: #e67e22 !important;
         color: #fff !important;
         font-weight: 600;
         border: none;
@@ -103,7 +96,30 @@ def main():
         transition: background 0.3s;
     }
     [data-testid="stSidebar"] .stButton>button:hover {
-        background: #c0392b !important;
+        background: #d35400 !important;
+    }
+
+    /* Chat input styling */
+    .stChatInput {
+        position: sticky;
+        bottom: 0;
+        background: #ffffff;
+        backdrop-filter: blur(6px);
+        padding: 10px;
+        margin-top: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .stChatInput>div>div>input {
+        background-color: #f0f0f0;
+        color: #333333;
+        font-weight: 500;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        padding: 10px;
+    }
+    .stChatInput>div>div>input:focus {
+        outline: 2px solid #4CAF50;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -114,7 +130,7 @@ def main():
         st.markdown("""
 **Strong Mathematics Assistant**  
 - Step-by-step solutions  
-- Line-by-line LaTeX usage  
+- LaTeX for math expressions  
 - Professional & instructive tone
         """)
         st.markdown("---")
@@ -122,7 +138,7 @@ def main():
         st.markdown("""
 1. **Ask** a math question in the chat box below.  
 2. **Receive** a step-by-step solution, labeled as Step 1, Step 2, etc.  
-3. **Check** the final answer in a clear LaTeX form.  
+3. **Check** the final answer in LaTeX form.  
 4. **Use** "New Chat" to start fresh.
         """)
         st.markdown("---")
@@ -141,6 +157,7 @@ def main():
     st.markdown("<h1 class='chat-title'>Strong Mathematics Chatbot</h1>", unsafe_allow_html=True)
     st.markdown("<p class='chat-subtitle'>Ask your math questions and get step-by-step, LaTeX-enhanced solutions.</p>", unsafe_allow_html=True)
 
+    # Initialize session state for chat history
     if "chat_history" not in st.session_state:
         st.session_state["chat_history"] = []
 
