@@ -9,9 +9,6 @@ from langchain_groq import ChatGroq
 GROQ_API_KEY = "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"
 
 # 2. STRONG, STRUCTURED SYSTEM PROMPT
-#    - Enforces line-by-line steps, labeled as Step 1, Step 2, etc.
-#    - Uses LaTeX for each step as needed.
-#    - Concludes with a "Final Answer" in LaTeX.
 DEFAULT_SYSTEM_PROMPT = """
 You are a strong mathematics assistant. When the user asks a question, do the following:
 1. Provide a clear, step-by-step solution, labeling each step as "Step 1", "Step 2", etc.
@@ -34,44 +31,59 @@ nest_asyncio.apply()
 
 def main():
     st.set_page_config(page_title="Strong Mathematics Chatbot", layout="wide")
-    
-    # --- Modern CSS for a Professional Look & Feel ---
+
+    # 4. NEW UI STYLING (from your provided CSS snippet)
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
     html, body, [class*="css"] {
         font-family: 'Poppins', sans-serif;
-        background: linear-gradient(135deg, #eef1f5 0%, #ffffff 100%);
+    }
+    body {
+        background: linear-gradient(135deg, #2c3e50, #bdc3c7);
+        margin: 0; padding: 0;
     }
     header, footer { display: none; }
-
-    /* Container for chat */
     .chat-container {
         max-width: 900px;
         margin: 40px auto;
-        background: #BLACK;
+        background: rgba(255,255,255,0.9);
         border-radius: 16px;
         padding: 25px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
     }
-
-    /* Title & subtitle styling */
     .chat-title {
         text-align: center;
         color: #2c3e50;
-        font-size: 2.2rem;
+        font-size: 2.4rem;
         font-weight: 600;
         margin-bottom: 5px;
     }
     .chat-subtitle {
         text-align: center;
-        color: #4f5f6f;
+        color: #34495e;
         margin-top: 0;
         margin-bottom: 20px;
         font-size: 1.1rem;
     }
-
-    /* Sidebar styling */
+    .stChatInput {
+        position: sticky;
+        bottom: 0;
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(6px);
+        padding: 10px;
+        margin-top: 20px;
+        border-radius: 12px;
+    }
+    .stChatInput>div>div>input {
+        color: #2c3e50;
+        font-weight: 500;
+        border-radius: 8px;
+        border: 1px solid #bdc3c7;
+    }
+    .stChatInput>div>div>input:focus {
+        outline: 2px solid #2980b9;
+    }
     [data-testid="stSidebar"] {
         background: #2c3e50 !important;
         color: #ecf0f1 !important;
@@ -93,33 +105,10 @@ def main():
     [data-testid="stSidebar"] .stButton>button:hover {
         background: #c0392b !important;
     }
-
-    /* Chat input styling */
-    .stChatInput {
-        position: sticky;
-        bottom: 0;
-        background: #000000 !important; /* black background for the input area */
-        color:black;
-        border-radius: 12px;
-        padding: 10px;
-        margin-top: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .stChatInput>div>div>input {
-        background-color: #000000 !important; /* black input box */
-        color: #black !important;           /* white text */
-        font-weight: 500;
-        border-radius: 8px;
-        border: 1px solid #bdc3c7;
-        padding: 10px;
-    }
-    .stChatInput>div>div>input:focus {
-        outline: 2px solid #2980b9;
-    }
     </style>
     """, unsafe_allow_html=True)
-    
-    # --- SIDEBAR ---
+
+    # -------- SIDEBAR --------
     with st.sidebar:
         st.header("About")
         st.markdown("""
@@ -147,7 +136,7 @@ def main():
         else:
             st.info("No conversation history yet.")
 
-    # --- MAIN CHAT AREA ---
+    # -------- MAIN CHAT AREA --------
     st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
     st.markdown("<h1 class='chat-title'>Strong Mathematics Chatbot</h1>", unsafe_allow_html=True)
     st.markdown("<p class='chat-subtitle'>Ask your math questions and get step-by-step, LaTeX-enhanced solutions.</p>", unsafe_allow_html=True)
@@ -163,7 +152,7 @@ def main():
             st.markdown(msg["answer"])
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # --- CHAT INPUT ---
+    # -------- CHAT INPUT --------
     user_query = st.chat_input("Type your math question here... (Press Enter)")
     if user_query:
         st.session_state["chat_history"].append({"question": user_query, "answer": ""})
