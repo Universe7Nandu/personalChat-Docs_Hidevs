@@ -107,7 +107,7 @@ def main():
     }
     .stChatInput>div>div>input {
         background-color: #000000 !important; /* black input box */
-        color: #ffffff !important;           /* white text */
+        color: #black !important;           /* white text */
         font-weight: 500;
         border-radius: 8px;
         border: 1px solid #bdc3c7;
