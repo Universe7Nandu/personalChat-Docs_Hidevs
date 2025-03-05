@@ -8,7 +8,7 @@ from langchain_groq import ChatGroq
 # 1. CONFIGURATION
 GROQ_API_KEY = "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"
 
-# 2. STRONG, STRUCTURED SYSTEM PROMPT WITH CONDITIONAL RESPONSE INSTRUCTIONS
+# 2. STRONG, STRUCTURED SYSTEM PROMPT WITH ESCAPED BRACES FOR LITERAL OUTPUT
 DEFAULT_SYSTEM_PROMPT = """
 You are a strong mathematics assistant with expertise in providing both concise and detailed explanations. When the user asks a question, follow these guidelines:
 1. If the user requests a minimal response, provide a brief, clear answer.
@@ -46,8 +46,6 @@ def main():
         margin: 0; padding: 0;
     }
     header, footer { display: none; }
-
-    /* Main chat container */
     .chat-container {
         max-width: 900px;
         margin: 40px auto;
@@ -56,8 +54,6 @@ def main():
         padding: 25px;
         box-shadow: 0 8px 32px rgba(0,0,0,0.2);
     }
-
-    /* Title and subtitle styling */
     .chat-title {
         text-align: center;
         color: #333333;
@@ -72,8 +68,6 @@ def main():
         margin-bottom: 20px;
         font-size: 1.1rem;
     }
-
-    /* Sidebar styling */
     [data-testid="stSidebar"] {
         background: #34495e !important;
         color: #ecf0f1 !important;
@@ -95,8 +89,6 @@ def main():
     [data-testid="stSidebar"] .stButton>button:hover {
         background: #d35400 !important;
     }
-
-    /* Chat input styling */
     .stChatInput {
         position: sticky;
         bottom: 0;
@@ -155,7 +147,6 @@ def main():
     st.markdown("<h1 class='chat-title'>Strong Mathematics Chatbot</h1>", unsafe_allow_html=True)
     st.markdown("<p class='chat-subtitle'>Ask your math questions and get concise or detailed step-by-step, LaTeX-enhanced solutions.</p>", unsafe_allow_html=True)
 
-    # Initialize session state for chat history
     if "chat_history" not in st.session_state:
         st.session_state["chat_history"] = []
 
@@ -168,10 +159,8 @@ def main():
     st.markdown("</div>", unsafe_allow_html=True)
 
     # -------- CHAT INPUT --------
-        # -------- CHAT INPUT --------
     user_query = st.chat_input("Type your math question here... (Press Enter)")
     if user_query is not None and user_query.strip() != "":
-        # Append the user's question to the conversation history
         st.session_state["chat_history"].append({"question": user_query, "answer": ""})
         with st.chat_message("user"):
             st.markdown(user_query)
