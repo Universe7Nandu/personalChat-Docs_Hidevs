@@ -5,10 +5,10 @@ import nest_asyncio
 import streamlit as st
 from langchain_groq import ChatGroq
 
-# 1. CONFIGURATION
+# ---------------- CONFIG ----------------
 GROQ_API_KEY = "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"
 
-# 2. SYSTEM PROMPT (No {user_query} placeholder needed since we use multi-turn messages)
+# ---------------- SYSTEM PROMPT ----------------
 DEFAULT_SYSTEM_PROMPT = """
 You are a strong mathematics assistant with expertise in providing both concise and detailed explanations. When the user asks a question, follow these guidelines:
 1. If the user requests a minimal response, provide a brief, clear answer.
@@ -26,7 +26,7 @@ Final Answer:
 $$ \\text{{Answer in LaTeX form}} $$
 """
 
-# 3. ALLOW NESTED EVENT LOOPS
+# Allow nested event loops (for async)
 nest_asyncio.apply()
 
 def main():
@@ -43,15 +43,17 @@ def main():
 - Professional & user-friendly tone
         """)
         st.markdown("---")
+
         st.header("How to Use")
         st.markdown("""
 1. **Ask** a math question in the chat box below.  
 2. **Receive** either a brief answer or a detailed, step-by-step solution.  
-3. **Review** the final answer in LaTeX format.  
-4. **Use** the conversation context (ask follow-up questions, references to previous answers, etc.).
+3. **Ask** follow-up questions referencing previous answers.  
+4. **Review** the final answer in LaTeX format.  
 5. **Click** "New Chat" to start over.
         """)
         st.markdown("---")
+
         st.header("Conversation History")
         if st.button("New Chat"):
             st.session_state.pop("chat_history", None)
@@ -82,7 +84,7 @@ def main():
             Strong Mathematics Chatbot
         </h1>
         <p class='chat-subtitle' style="text-align: center; color: #555555; margin-top: 0; margin-bottom: 20px; font-size: 1.1rem;">
-            Ask your math questions and get context-aware, concise or detailed step-by-step solutions with LaTeX.
+            Ask your math questions and get multi-turn, context-aware solutions with LaTeX.
         </p>
         """,
         unsafe_allow_html=True
@@ -91,7 +93,7 @@ def main():
     if "chat_history" not in st.session_state:
         st.session_state["chat_history"] = []
 
-    # Display existing conversation in the UI
+    # Display existing conversation
     for msg in st.session_state["chat_history"]:
         with st.chat_message("user"):
             st.markdown(msg["question"])
@@ -103,44 +105,45 @@ def main():
     # ---------------- CHAT INPUT ----------------
     user_query = st.chat_input("Type your math question here... (Press Enter)")
     if user_query and user_query.strip():
-        # 1. Store the new question
+        # Store the user's new question
         st.session_state["chat_history"].append({"question": user_query, "answer": ""})
-        
-        # 2. Display user message
+
+        # Display user's message
         with st.chat_message("user"):
             st.markdown(user_query)
 
         with st.spinner("Solving your problem..."):
-            # ---------------- BUILD MESSAGE LIST FOR THE LLM ----------------
-            # Start with a "system" role message for the instructions
-            messages = [
-                {"role": "system", "content": DEFAULT_SYSTEM_PROMPT}
-            ]
+            # 1. Build the message list with system + prior turns
+            messages = []
+            # Add system prompt first
+            messages.append({"role": "system", "content": DEFAULT_SYSTEM_PROMPT})
 
-            # Add all previous conversation turns to the message list
-            for entry in st.session_state["chat_history"][:-1]:
-                messages.append({"role": "user", "content": entry["question"]})
-                messages.append({"role": "assistant", "content": entry["answer"]})
+            # Add all previous conversation turns
+            for turn in st.session_state["chat_history"][:-1]:
+                messages.append({"role": "user", "content": turn["question"]})
+                messages.append({"role": "assistant", "content": turn["answer"]})
 
-            # Add the newest user question
+            # Add the newest user query
             messages.append({"role": "user", "content": user_query})
 
-            # 3. Create the LLM instance
+            # 2. Create the LLM instance
             llm = ChatGroq(
                 temperature=0.7,
                 groq_api_key=GROQ_API_KEY,
                 model_name="mixtral-8x7b-32768"
             )
 
-            # 4. Call the LLM with the entire conversation
+            # 3. Call the LLM with the entire conversation
             try:
                 response = asyncio.run(llm.ainvoke(messages))
                 bot_answer = response.content
             except Exception as e:
                 bot_answer = f"An error occurred while processing your request: {str(e)}"
 
-        # 5. Save and display the assistant's response
+        # Store the assistant's reply
         st.session_state["chat_history"][-1]["answer"] = bot_answer
+
+        # Display assistant's response
         with st.chat_message("assistant"):
             st.markdown(bot_answer)
 
