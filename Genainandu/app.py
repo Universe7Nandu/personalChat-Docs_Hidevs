@@ -4,269 +4,199 @@ import asyncio
 import nest_asyncio
 import streamlit as st
 from langchain_groq import ChatGroq
-import matplotlib.pyplot as plt
-import numpy as np
 
 # ---------------- CONFIGURATION ----------------
 GROQ_API_KEY = "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"
 
 # ---------------- SYSTEM PROMPT ----------------
 DEFAULT_SYSTEM_PROMPT = """
-You are a friendly mathematics genius assistant 🤓. Follow these guidelines:
+You are a mathematics assistant with multi-turn memory. Follow these guidelines:
 
-1. Provide clear explanations with LaTeX math formatting 💡
-2. Use emojis to make responses approachable and engaging 🎯
-3. Offer step-by-step solutions for complex problems 📝
-4. Create visualizations/graphs when relevant 📊
-5. Maintain multi-conversation memory 🔄
-6. For basic questions, give concise answers with 1-2 emojis ⚡
-7. For advanced topics, break down into numbered steps 📚
-8. Always be encouraging and patient 🌟
-9. Use these response starters:
-   - "Great question! Let's break it down... 🔍"
-   - "Wonderful! Here's how we solve this... 🚀"
-   - "Excellent query! The solution involves... 💡"
+1. Always read and analyze the entire conversation history before responding.
+2. Provide direct answers to the user's specific queries based on the context of previous questions.
+3. Use LaTeX formatting for mathematical clarity.
+4. Include step-by-step solutions when solving complex problems.
+5. If a user asks for clarification or follow-up, refer to previous questions and answers in your response.
+6. Avoid generic or convincing responses. Be direct, clear, and accurate.
 
-Example Response:
-"To solve ∫x² dx from 0 to 2:
-1️⃣ First, find the antiderivative: ∫x² dx = (x³)/3 + C
-2️⃣ Evaluate at bounds: (2³)/3 - (0³)/3 = 8/3
-3️⃣ Final answer: $$\\frac{8}{3}$$ 📐
+Example:
+User: Solve 2x + 3 = 7.
+Assistant: Step 1: Subtract 3 from both sides: 2x = 4.  
+Step 2: Divide both sides by 2: x = 2.  
+Final Answer: $$x = 2$$.
 
-Need more details? Just ask! 😊"
+If the user asks "What was my previous question?", respond with:
+"Your previous question was: [question]."
+
+Let's begin!
 """
 
-# ---------------- UI CONFIGURATION ----------------
-BACKGROUND_GRADIENT = """
-background: linear-gradient(135deg, 
-    rgba(106,76,147,0.95) 0%, 
-    rgba(72,152,176,0.95) 50%, 
-    rgba(34,193,195,0.95) 100%);
-"""
-
+# Allow nested event loops for async operations
 nest_asyncio.apply()
 
 def main():
-    st.set_page_config(page_title="MathPal 🤖", layout="wide", page_icon="🧮")
-    
-    # ---------------- CUSTOM STYLES ----------------
-    st.markdown(f"""
+    st.set_page_config(page_title="MathPal - Multi-Turn Memory 🤖", layout="wide", page_icon="🧮")
+
+    # ---------------- CUSTOM UI STYLING ----------------
+    st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
     
-    * {{
+    * {
         font-family: 'Inter', sans-serif;
-    }}
+    }
     
-    body {{
-        {BACKGROUND_GRADIENT}
-        background-attachment: fixed;
-    }}
+    body {
+        background: linear-gradient(135deg, rgba(34,193,195,1) 0%, rgba(253,187,45,1) 100%);
+        margin: 0;
+        padding: 0;
+    }
     
-    .chat-container {{
+    .chat-container {
         max-width: 900px;
-        margin: 2rem auto;
-        backdrop-filter: blur(10px);
-        background: rgba(255,255,255,0.9);
-        border-radius: 20px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        padding: 2rem;
-        animation: slideUp 0.6s ease;
-    }}
+        margin: 40px auto;
+        background: rgba(255,255,255,0.95);
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        animation: fadeIn 1s ease-in-out;
+    }
     
-    @keyframes slideUp {{
-        0% {{ transform: translateY(40px); opacity: 0; }}
-        100% {{ transform: translateY(0); opacity: 1; }}
-    }}
+    .chat-title {
+        text-align: center;
+        color: #333333;
+        font-size: 2.4rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
     
-    .stChatInput textarea {{
-        border-radius: 15px !important;
-        padding: 1rem !important;
-        font-size: 1.1rem !important;
-        border: 2px solid #6a4c93 !important;
-        transition: all 0.3s ease !important;
-    }}
+    .chat-subtitle {
+        text-align: center;
+        color: #555555;
+        font-size: 1rem;
+        margin-bottom: 20px;
+    }
     
-    .stChatInput textarea:focus {{
-        box-shadow: 0 0 15px rgba(106,76,147,0.3) !important;
-    }}
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
     
-    .user-message {{
-        background: #6a4c93 !important;
+    .stChatInput textarea {
+        border-radius: 12px !important;
+        padding: 15px !important;
+        font-size: 1rem !important;
+    }
+    
+    .user-message {
+        background-color: #3498DB !important;
         color: white !important;
-        border-radius: 15px 15px 0 15px !important;
-        margin-left: auto;
-        max-width: 70%;
-        animation: fadeIn 0.4s ease;
-    }}
+        padding: 15px !important;
+        border-radius: 12px !important;
+        margin-left: auto !important;
+    }
     
-    .assistant-message {{
-        background: #f3f4f6 !important;
-        border-radius: 15px 15px 15px 0 !important;
-        margin-right: auto;
-        max-width: 70%;
-        animation: fadeIn 0.4s ease;
-        position: relative;
-    }}
+    .assistant-message {
+        background-color: #ECF0F1 !important;
+        color: #333333 !important;
+        padding: 15px !important;
+        border-radius: 12px !important;
+        margin-right: auto !important;
+    }
     
-    .assistant-message::before {{
-        content: "🧮";
-        position: absolute;
-        left: -40px;
-        top: 10px;
-        font-size: 1.5rem;
-    }}
+    [data-testid="stSidebar"] {
+        background-color: rgba(44,62,80,0.9) !important;
+    }
     
-    [data-testid="stSidebar"] {{
-        background: rgba(42, 47, 79, 0.9) !important;
-        backdrop-filter: blur(5px) !important;
-        border-right: 1px solid rgba(255,255,255,0.1) !important;
-    }}
-    
-    .sidebar-header {{
-        color: white !important;
-        font-size: 1.8rem !important;
-        padding: 1rem !important;
-        border-bottom: 2px solid rgba(255,255,255,0.1) !important;
-    }}
-    
-    .history-item {{
-        padding: 0.8rem;
-        margin: 0.5rem 0;
-        background: rgba(255,255,255,0.1);
-        border-radius: 10px;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }}
-    
-    .history-item:hover {{
-        background: rgba(255,255,255,0.2);
-        transform: translateX(5px);
-    }}
     </style>
     """, unsafe_allow_html=True)
 
     # ---------------- SIDEBAR ----------------
     with st.sidebar:
+        st.header("MathPal - Multi-Turn Memory 🤖")
+        
         st.markdown("""
-        <div class='sidebar-header'>
-            MathPal History 📚
-        </div>
-        """, unsafe_allow_html=True)
+            MathPal is a smart mathematics assistant that remembers your entire conversation history and provides direct answers based on context.
+            
+            ### Features:
+            - Multi-turn memory for context-aware answers.
+            - Step-by-step solutions with LaTeX formatting.
+            - Clear and concise responses without generic explanations.
+            
+            ### How to Use:
+            - Ask any math-related question (e.g., solve equations, calculus problems).
+            - Follow up with clarifications or related queries.
+            - Start a new chat anytime by clicking below.
+            
+            ---
+            """)
         
-        if st.button("✨ New Chat", use_container_width=True):
+        if st.button("Start New Chat"):
             st.session_state.pop("chat_history", None)
-            st.success("New session started! 🎉")
-        
-        st.markdown("<div style='height: 20px'></div>", unsafe_allow_html=True)
-        
-        if "chat_history" in st.session_state:
-            for idx, item in enumerate(st.session_state.chat_history):
-                st.markdown(f"""
-                <div class='history-item'>
-                    <div style='color: #ddd; font-size: 0.9rem;'>Q{idx+1}: {item['question'][:50]}...</div>
-                </div>
-                """, unsafe_allow_html=True)
+            st.success("New chat started!")
 
-    # ---------------- MAIN INTERFACE ----------------
+    # ---------------- MAIN CHAT AREA ----------------
     st.markdown("""
     <div class='chat-container'>
-        <h1 style='
-            text-align: center;
-            color: #2d2d2d;
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-        '>
-            MathPal 🤖
-        </h1>
-        <p style='
-            text-align: center;
-            color: #666;
-            font-size: 1.1rem;
-            margin-bottom: 2rem;
-        '>
-            Your friendly mathematics companion • Ask anything from basic arithmetic to advanced calculus! 📚
-        </p>
-    """, unsafe_allow_html=True)
+      <h1 class='chat-title'>MathPal 🤖</h1>
+      <p class='chat-subtitle'>Ask your math questions and get accurate solutions with memory-aware responses!</p>
+      """, unsafe_allow_html=True)
 
-    # ---------------- CHAT HISTORY ----------------
     if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
+        st.session_state["chat_history"] = []
 
-    for msg in st.session_state.chat_history:
-        with st.chat_message("user", avatar="🧑💻"):
-            st.markdown(f"<div class='user-message'>{msg['question']}</div>", unsafe_allow_html=True)
+    # Display chat history
+    for msg in st.session_state["chat_history"]:
+        if msg["role"] == "user":
+            with st.chat_message("user"):
+                st.markdown(f"<div class='user-message'>{msg['content']}</div>", unsafe_allow_html=True)
         
-        with st.chat_message("assistant", avatar="🤖"):
-            response = msg['answer'].replace("$$", "$")  # Fix LaTeX rendering
-            st.markdown(f"<div class='assistant-message'>{response}</div>", unsafe_allow_html=True)
-            
-            # Auto-generate graphs for relevant responses
-            if "graph" in msg['question'].lower():
-                x = np.linspace(-5, 5, 100)
-                y = np.sin(x) if "sin" in msg['question'].lower() else x**2
-                
-                fig, ax = plt.subplots()
-                ax.plot(x, y, color='#6a4c93')
-                ax.set_title("Visualization 📈")
-                st.pyplot(fig)
+        elif msg["role"] == "assistant":
+            with st.chat_message("assistant"):
+                st.markdown(f"<div class='assistant-message'>{msg['content']}</div>", unsafe_allow_html=True)
 
-    # ---------------- CHAT INPUT ----------------
-    user_input = st.chat_input("Ask any math question... 🚀 (E.g.: 'Explain integration basics')")
+    # Chat input box
+    user_input = st.chat_input("Type your math question here...")
     
-    if user_input and user_input.strip():
-        # Add to chat history
-        st.session_state.chat_history.append({
-            "question": user_input,
-            "answer": ""
-        })
+    if user_input:
         
-        # Display user message
-        with st.chat_message("user", avatar="🧑💻"):
+        # Add user's message to chat history
+        st.session_state["chat_history"].append({"role": "user", "content": user_input})
+        
+        # Display user's message in real-time
+        with st.chat_message("user"):
             st.markdown(f"<div class='user-message'>{user_input}</div>", unsafe_allow_html=True)
         
-        # Process query
-        with st.spinner("Analyzing your question... 🔍"):
+        # Process user input and generate assistant's response
+        with st.spinner("Thinking... 🤔"):
             messages = [{"role": "system", "content": DEFAULT_SYSTEM_PROMPT}]
             
-            # Add previous conversation context
-            for turn in st.session_state.chat_history[:-1]:
-                messages.append({"role": "user", "content": turn["question"]})
-                messages.append({"role": "assistant", "content": turn["answer"]})
+            # Add conversation history to messages for context-awareness
+            messages.extend(st.session_state["chat_history"])
             
-            messages.append({"role": "user", "content": user_input})
+            llm = ChatGroq(
+                temperature=0.7,
+                groq_api_key=GROQ_API_KEY,
+                model_name="mixtral-8x7b-32768"
+            )
             
             try:
-                llm = ChatGroq(
-                    temperature=0.7,
-                    groq_api_key=GROQ_API_KEY,
-                    model_name="mixtral-8x7b-32768"
-                )
-                
                 response = asyncio.run(llm.ainvoke(messages))
-                bot_response = response.content
+                assistant_response = response.content
                 
-                # Add visualization for relevant responses
-                if any(keyword in user_input.lower() for keyword in ["graph", "plot", "visualize"]):
-                    x = np.linspace(-5, 5, 100)
-                    y = np.sin(x) if "sin" in user_input.lower() else x**2
-                    
-                    fig, ax = plt.subplots()
-                    ax.plot(x, y, color='#6a4c93')
-                    ax.set_title("Visualization 📈")
-                    st.pyplot(fig)
+                # Append assistant's response to chat history
+                st.session_state["chat_history"].append({"role": "assistant", "content": assistant_response})
                 
-            except Exception as e:
-                bot_response = f"Oops! Something went wrong 😟\nError: {str(e)}"
+                # Display assistant's response in real-time
+                with st.chat_message("assistant"):
+                    st.markdown(f"<div class='assistant-message'>{assistant_response}</div>", unsafe_allow_html=True)
             
-            # Update chat history
-            st.session_state.chat_history[-1]["answer"] = bot_response
-        
-        # Display assistant response
-        with st.chat_message("assistant", avatar="🤖"):
-            st.markdown(f"<div class='assistant-message'>{bot_response}</div>", unsafe_allow_html=True)
-
-    st.markdown("</div>", unsafe_allow_html=True)
+            except Exception as e:
+                error_message = f"An error occurred while processing your request 😟\nError details:\n{str(e)}"
+                st.session_state["chat_history"].append({"role": "assistant", "content": error_message})
+                
+                with st.chat_message("assistant"):
+                    st.markdown(f"<div class='assistant-message'>{error_message}</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
