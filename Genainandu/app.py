@@ -8,35 +8,33 @@ from langchain_groq import ChatGroq
 # 1. CONFIGURATION
 GROQ_API_KEY = "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"
 
-# 2. STRONG, STRUCTURED SYSTEM PROMPT
+# 2. STRONG, STRUCTURED SYSTEM PROMPT WITH CONDITIONAL RESPONSE INSTRUCTIONS
 DEFAULT_SYSTEM_PROMPT = """
-You are a strong mathematics assistant. When the user asks a question, do the following:
-1. Provide a clear, step-by-step solution, labeling each step as "Step 1", "Step 2", etc.
-2. In each step, if you use any math expressions, enclose them in LaTeX: $$ ... $$.
-3. Conclude with a section labeled "Final Answer" that contains the result in LaTeX.
-4. Maintain a professional and instructive tone.
+You are a strong mathematics assistant with expertise in providing both concise and detailed explanations. When the user asks a question, follow these guidelines:
+1. If the user requests a minimal response, provide a brief, clear answer.
+2. If the user requests a detailed or step-by-step explanation, provide a clear, step-by-step solution, labeling each step as "Step 1", "Step 2", etc.
+3. Enclose any math expressions in LaTeX using $$ ... $$.
+4. Conclude with a section labeled "Final Answer" that contains the result in LaTeX.
+5. Provide strong external knowledge and proper formatting when needed.
+6. Maintain a professional and instructive tone.
 
-Example Format:
-Step 1: Explanation here with $$ \\text{LaTeX} $$ if needed.
-Step 2: Explanation here with $$ \\text{LaTeX} $$ if needed.
+Example Format for Detailed Answers:
+Step 1: Explanation here with $$ \\text{{LaTeX}} $$ if needed.
+Step 2: Explanation here with $$ \\text{{LaTeX}} $$ if needed.
 ...
 Final Answer:
-$$ \\text{Answer in LaTeX form} $$
+$$ \\text{{Answer in LaTeX form}} $$
 
 Question: {user_query}
 """
 
-# 3. APPLY ASYNC PATCH
+# 3. APPLY ASYNC PATCH (to support nested event loops)
 nest_asyncio.apply()
 
 def main():
     st.set_page_config(page_title="Strong Mathematics Chatbot", layout="wide")
 
-    # 4. BRAND-NEW UI STYLING
-    #    - Changed background gradient
-    #    - Updated chat container styles
-    #    - New colors for the sidebar
-    #    - Input box with a different look
+    # -------- UI STYLING --------
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
@@ -44,7 +42,6 @@ def main():
         font-family: 'Poppins', sans-serif;
     }
     body {
-        /* A fresh, vibrant gradient background */
         background: linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%);
         margin: 0; padding: 0;
     }
@@ -129,17 +126,18 @@ def main():
         st.header("About")
         st.markdown("""
 **Strong Mathematics Assistant**  
-- Step-by-step solutions  
-- LaTeX for math expressions  
-- Professional & instructive tone
+- Provides both concise and detailed step-by-step solutions  
+- Uses LaTeX for math expressions  
+- Incorporates strong external knowledge  
+- Professional & user-friendly tone
         """)
         st.markdown("---")
         st.header("How to Use")
         st.markdown("""
 1. **Ask** a math question in the chat box below.  
-2. **Receive** a step-by-step solution, labeled as Step 1, Step 2, etc.  
-3. **Check** the final answer in LaTeX form.  
-4. **Use** "New Chat" to start fresh.
+2. **Receive** either a brief answer or a detailed, step-by-step solution.  
+3. **Review** the final answer in LaTeX format.  
+4. **Click** "New Chat" to start over.
         """)
         st.markdown("---")
         st.header("Conversation History")
@@ -155,7 +153,7 @@ def main():
     # -------- MAIN CHAT AREA --------
     st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
     st.markdown("<h1 class='chat-title'>Strong Mathematics Chatbot</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='chat-subtitle'>Ask your math questions and get step-by-step, LaTeX-enhanced solutions.</p>", unsafe_allow_html=True)
+    st.markdown("<p class='chat-subtitle'>Ask your math questions and get concise or detailed step-by-step, LaTeX-enhanced solutions.</p>", unsafe_allow_html=True)
 
     # Initialize session state for chat history
     if "chat_history" not in st.session_state:
@@ -171,21 +169,27 @@ def main():
 
     # -------- CHAT INPUT --------
     user_query = st.chat_input("Type your math question here... (Press Enter)")
-    if user_query:
+    if user_query is not None and user_query.strip() != "":
+        # Append the user's question to the conversation history
         st.session_state["chat_history"].append({"question": user_query, "answer": ""})
         with st.chat_message("user"):
             st.markdown(user_query)
         with st.spinner("Solving your problem..."):
-            # Build the prompt
-            prompt = DEFAULT_SYSTEM_PROMPT.format(user_query=user_query)
+            # Ensure the user query is safe and non-empty
+            safe_user_query = user_query.strip()
+            prompt = DEFAULT_SYSTEM_PROMPT.format(user_query=safe_user_query)
+            
             llm = ChatGroq(
                 temperature=0.7,
                 groq_api_key=GROQ_API_KEY,
                 model_name="mixtral-8x7b-32768"
             )
-            # Invoke the LLM asynchronously
-            response = asyncio.run(llm.ainvoke([{"role": "user", "content": prompt}]))
-            bot_answer = response.content
+            try:
+                # Invoke the language model asynchronously
+                response = asyncio.run(llm.ainvoke([{"role": "user", "content": prompt}]))
+                bot_answer = response.content
+            except Exception as e:
+                bot_answer = f"An error occurred while processing your request: {str(e)}"
         
         st.session_state["chat_history"][-1]["answer"] = bot_answer
         with st.chat_message("assistant"):
