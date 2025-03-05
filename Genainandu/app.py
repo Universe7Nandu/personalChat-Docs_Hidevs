@@ -168,6 +168,7 @@ def main():
     st.markdown("</div>", unsafe_allow_html=True)
 
     # -------- CHAT INPUT --------
+        # -------- CHAT INPUT --------
     user_query = st.chat_input("Type your math question here... (Press Enter)")
     if user_query is not None and user_query.strip() != "":
         # Append the user's question to the conversation history
@@ -175,8 +176,8 @@ def main():
         with st.chat_message("user"):
             st.markdown(user_query)
         with st.spinner("Solving your problem..."):
-            # Ensure the user query is safe and non-empty
-            safe_user_query = user_query.strip()
+            # Escape any curly braces in the user query to prevent format errors
+            safe_user_query = user_query.strip().replace("{", "{{").replace("}", "}}")
             prompt = DEFAULT_SYSTEM_PROMPT.format(user_query=safe_user_query)
             
             llm = ChatGroq(
