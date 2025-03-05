@@ -8,6 +8,7 @@ import streamlit as st
 import plotly.graph_objs as go
 import sympy
 from sympy.parsing.sympy_parser import parse_expr
+import numpy as np
 from langchain_groq import ChatGroq
 
 # ==============================
@@ -15,52 +16,56 @@ from langchain_groq import ChatGroq
 # ==============================
 GROQ_API_KEY = "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"
 
-# For demonstration, a minimal knowledge base:
+# A simple knowledge base for math concepts (for sidebar search)
 MATH_CONCEPTS = {
     "derivative rules": """
-**Derivative Rules**:
-1. d/dx [x^n] = n x^(n-1)
-2. d/dx [sin x] = cos x
-3. d/dx [cos x] = -sin x
-4. d/dx [e^x] = e^x
-5. d/dx [ln x] = 1/x
-... (etc.)
+**Derivative Rules** (Reference):
+1. \\(\\frac{d}{dx}[x^n] = n x^{n-1}\\)
+2. \\(\\frac{d}{dx}[\\sin x] = \\cos x\\)
+3. \\(\\frac{d}{dx}[\\cos x] = -\\sin x\\)
+4. \\(\\frac{d}{dx}[e^x] = e^x\\)
+5. \\(\\frac{d}{dx}[\\ln x] = \\frac{1}{x}\\)
 """,
     "integration rules": """
-**Integration Rules**:
-1. ∫ x^n dx = x^(n+1)/(n+1) + C
-2. ∫ sin x dx = -cos x + C
-3. ∫ cos x dx = sin x + C
-4. ∫ e^x dx = e^x + C
-5. ∫ 1/x dx = ln|x| + C
-... (etc.)
+**Integration Rules** (Reference):
+1. \\(\\int x^n \\, dx = \\frac{x^{n+1}}{n+1} + C\\)
+2. \\(\\int \\sin x \\, dx = -\\cos x + C\\)
+3. \\(\\int \\cos x \\, dx = \\sin x + C\\)
+4. \\(\\int e^x \\, dx = e^x + C\\)
+5. \\(\\int \\frac{1}{x} \\, dx = \\ln|x| + C\\)
 """,
     "pythagorean theorem": """
-**Pythagorean Theorem**:
-For a right triangle with legs a, b and hypotenuse c:
-a^2 + b^2 = c^2
+**Pythagorean Theorem** (Reference):
+For a right triangle with legs \\(a\\) and \\(b\\) and hypotenuse \\(c\\):
+\\[
+a^2 + b^2 = c^2.
+\\]
 """
 }
 
 # ==============================
-#     STRONG SYSTEM PROMPT
+#     REFINED SYSTEM PROMPT
 # ==============================
 SYSTEM_PROMPT = """
-You are an enterprise-grade mathematics assistant with these capabilities:
-1. **Problem Solving**: Provide step-by-step solutions with advanced LaTeX. 
-2. **Visualization**: Generate dynamic plots if the user requests a graph, e.g. "Plot x^2 from -2 to 2."
-3. **Search**: If the user references a known math concept, incorporate it into your response or direct them to the concept if needed.
-4. **Multi-turn Memory**: Always read the entire conversation so far. Refer to prior questions and answers if relevant.
-5. **Clarity**: Avoid generic or overly convincing responses. Be direct, accurate, and professional.
-6. **Workflow**: If the user specifically says "plot" or "graph," try to create a dynamic Plotly figure. 
-7. **Tone**: Maintain a professional and instructive tone. Use LaTeX for math expressions.
+You are a seasoned mathematician with expertise in advanced fields such as differential geometry, topology, and abstract algebra, as well as their practical applications in physics and computer science. Your responses must be mathematically rigorous, clear, and accessible—much like a professor explaining complex concepts to students.
 
-Remember:
-- Provide detailed steps for complex solutions.
-- Summarize with a "Final Answer" in LaTeX if it's a calculation.
-- If the user asks "What was my previous question?" respond with the stored conversation content.
+Your knowledge spans:
+- Differential Geometry, Topology, and Abstract Algebra
+- Real and Complex Analysis, Number Theory, and Probability Theory
+- Programming with Python and Mathematica for computational illustrations
 
-Let's begin!
+Instructions:
+1. Provide precise, step-by-step solutions for mathematical problems.
+2. Use LaTeX formatting for all mathematical expressions: wrap display equations in $$...$$ and inline expressions in \\(...\\).
+3. Separate explanations from equations using proper indentation and formatting.
+4. If a problem admits multiple solution methods, briefly compare them.
+5. Provide dynamic visualizations (e.g., Plotly graphs) when appropriate.
+6. If you are uncertain about an answer, state the uncertainty explicitly—do not fabricate details.
+7. Emulate a distinguished math professor: be clear, methodical, and insightful.
+8. Conclude your responses with a clearly highlighted final answer (e.g., in bold and slightly larger font).
+9. When sharing code or LaTeX examples, enclose them within triple backticks with the appropriate language tag.
+
+Let’s begin our conversation!
 """
 
 # ==============================
@@ -85,14 +90,14 @@ def main():
         font-family: 'Inter', sans-serif;
     }
     body {
-        background: linear-gradient(135deg, #22C1C3 0%, #FDBB2D 100%);
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
         margin: 0;
         padding: 0;
     }
     .chat-container {
         max-width: 950px;
         margin: 40px auto;
-        background: rgba(255,255,255,0.95);
+        background: rgba(255,255,255,0.97);
         border-radius: 16px;
         padding: 25px;
         box-shadow: 0 8px 32px rgba(0,0,0,0.2);
@@ -100,15 +105,15 @@ def main():
     }
     .chat-title {
         text-align: center;
-        color: #333;
-        font-size: 2.4rem;
+        color: #ffffff;
+        font-size: 2.6rem;
         font-weight: 700;
-        margin-bottom: 5px;
+        margin-bottom: 10px;
     }
     .chat-subtitle {
         text-align: center;
-        color: #555;
-        font-size: 1rem;
+        color: #e0e0e0;
+        font-size: 1.1rem;
         margin-bottom: 20px;
     }
     @keyframes fadeIn {
@@ -123,21 +128,23 @@ def main():
     .user-bubble {
         background-color: #3498DB;
         color: #fff;
-        padding: 10px 15px;
+        padding: 12px 18px;
         border-radius: 12px;
         margin-left: auto;
         max-width: 80%;
+        font-size: 1rem;
     }
     .assistant-bubble {
         background-color: #ECF0F1;
         color: #333;
-        padding: 10px 15px;
+        padding: 12px 18px;
         border-radius: 12px;
         margin-right: auto;
         max-width: 80%;
+        font-size: 1rem;
     }
     [data-testid="stSidebar"] {
-        background-color: rgba(44,62,80,0.9) !important;
+        background-color: rgba(44,62,80,0.95) !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -149,26 +156,24 @@ def main():
         st.title("Enterprise MathPal 🏢🔢")
         st.markdown("""
 **An enterprise-grade mathematics platform** with:
-- **Step-by-step solutions** using LaTeX
-- **Dynamic plotting** for graphs and diagrams
-- **Multi-turn memory** for context-aware answers
-- **Quick concept search** to reference math rules
+- Rigorous, step-by-step solutions in LaTeX
+- Dynamic Plotly visualizations
+- Multi-turn context-aware conversation
+- Quick reference to math concepts
 
 ---
-        """)
-        # Quick search for math concepts
+""")
+        # Math concept search
         st.subheader("Search Math Concepts")
-        concept_query = st.text_input("Enter a concept (e.g. 'derivative rules')")
+        concept_query = st.text_input("Enter a concept (e.g., 'derivative rules')")
         if concept_query:
-            # Basic lookup
             lower_query = concept_query.strip().lower()
             if lower_query in MATH_CONCEPTS:
                 st.markdown(MATH_CONCEPTS[lower_query])
             else:
-                st.warning("No matching concept found. Try 'derivative rules' or 'integration rules'.")
+                st.warning("Concept not found. Try 'derivative rules' or 'integration rules'.")
 
         st.markdown("---")
-        # New Chat
         if st.button("New Chat"):
             st.session_state.pop("chat_history", None)
             st.success("New conversation started!")
@@ -179,14 +184,13 @@ def main():
     st.markdown("""
     <div class='chat-container'>
       <h1 class='chat-title'>Enterprise MathPal</h1>
-      <p class='chat-subtitle'>Ask your math questions, request plots, or reference math concepts!</p>
+      <p class='chat-subtitle'>Ask advanced math questions, request visualizations, or search math concepts. Enjoy clear, rigorous solutions!</p>
     """, unsafe_allow_html=True)
 
-    # Initialize chat history
     if "chat_history" not in st.session_state:
         st.session_state["chat_history"] = []
 
-    # Display existing conversation
+    # Display conversation history
     for msg in st.session_state["chat_history"]:
         if msg["role"] == "user":
             with st.chat_message("user"):
@@ -200,51 +204,41 @@ def main():
     # ===========================
     #       CHAT INPUT
     # ===========================
-    user_input = st.chat_input("Type your math query here (e.g., 'Solve x^2=4' or 'Plot x^2 from -2 to 2')")
+    user_input = st.chat_input("Type your advanced math query here (e.g., 'Solve x^2=4' or 'Plot x^2 from -2 to 2')")
 
     if user_input and user_input.strip():
-        # Show user bubble
         st.session_state["chat_history"].append({"role": "user", "content": user_input})
         with st.chat_message("user"):
             st.markdown(f"<div class='user-bubble'>{user_input}</div>", unsafe_allow_html=True)
 
-        # Attempt to parse a "plot" command before calling LLM
-        # If recognized, we'll generate a dynamic plot and show it,
-        # then let LLM handle the rest of the conversation too.
+        # Attempt to parse a plot command before calling the LLM
         plot_generated = False
         plot_figure = None
         parsed_plot = parse_plot_command(user_input)
-
         if parsed_plot:
             plot_figure = generate_plot(*parsed_plot)  # (expr, x_min, x_max)
             plot_generated = True
 
-        with st.spinner("Thinking..."):
-            # Build messages for LLM
+        with st.spinner("Processing your request..."):
+            # Build the message list for the LLM including multi-turn context
             messages = [{"role": "system", "content": SYSTEM_PROMPT}]
             for entry in st.session_state["chat_history"]:
                 messages.append({"role": entry["role"], "content": entry["content"]})
-
             llm = ChatGroq(
                 temperature=0.7,
                 groq_api_key=GROQ_API_KEY,
                 model_name="mixtral-8x7b-32768"
             )
-
             try:
                 response = asyncio.run(llm.ainvoke(messages))
                 assistant_response = response.content
             except Exception as e:
                 assistant_response = f"Error: {str(e)}"
 
-        # If we made a plot, embed it in the assistant's message:
         if plot_generated and plot_figure is not None:
-            # Convert Plotly figure to HTML for embedding
-            plot_html = st.plotly_chart(plot_figure, use_container_width=True)
-            # We'll add a short text that a plot was generated
-            assistant_response += "\n\n(Generated a dynamic plot based on your request.)"
+            st.plotly_chart(plot_figure, use_container_width=True)
+            assistant_response += "\n\n(Generated a dynamic Plotly graph based on your request.)"
 
-        # Show assistant bubble
         st.session_state["chat_history"].append({"role": "assistant", "content": assistant_response})
         with st.chat_message("assistant"):
             st.markdown(f"<div class='assistant-bubble'>{assistant_response}</div>", unsafe_allow_html=True)
@@ -254,14 +248,12 @@ def main():
 # ===========================
 def parse_plot_command(text):
     """
-    Attempts to parse user input like 'plot x^2 from -2 to 2'
-    Returns (expr, x_min, x_max) if found, else None
+    Parses commands like 'plot x^2 from -2 to 2'
+    Returns a tuple (expr_str, x_min, x_max) if matched, else None.
     """
-    # Basic detection
     text_lower = text.lower()
     if "plot" not in text_lower:
         return None
-    # Example pattern: "plot x^2 from -2 to 2"
     match = re.search(r"plot\s+(.+)\s+from\s+(-?\d+)\s+to\s+(-?\d+)", text_lower)
     if match:
         expr_str = match.group(1).strip()
@@ -275,24 +267,19 @@ def parse_plot_command(text):
 
 def generate_plot(expr_str, x_min, x_max):
     """
-    Generates a Plotly figure for the given expression and range.
+    Generates a Plotly plot for the given expression and x-range.
     """
     x = sympy.Symbol('x', real=True)
     try:
         parsed_expr = parse_expr(expr_str, transformations=sympy.parsing.sympy_parser.standard_transformations)
-    except:
+    except Exception:
         return None
-
-    # Create data points
-    import numpy as np
     xs = np.linspace(x_min, x_max, 200)
-    # Evaluate expression
     f = sympy.lambdify(x, parsed_expr, 'numpy')
     try:
         ys = f(xs)
-    except:
+    except Exception:
         return None
-
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=xs, y=ys, mode='lines', name=f"{expr_str}"))
     fig.update_layout(
