@@ -69,6 +69,38 @@ Let’s begin our conversation!
 """
 
 # ==============================
+#   SPECIAL QUERY HANDLER
+# ==============================
+def handle_special_queries(user_text: str) -> str or None:
+    """
+    If user specifically asks 'Who created this chatbot?', respond with 
+    details about Nandesh Kalashetti. Provide a shorter or longer version 
+    depending on whether the user includes the word 'short' or 'long'.
+    Otherwise, return None.
+    """
+    text_lower = user_text.lower()
+
+    if "who created this chatbot" in text_lower:
+        # Check if user also says 'short'
+        if "short" in text_lower:
+            return (
+                "**Short Answer**: This chatbot was created by Nandesh Kalashetti, "
+                "a Full-Stack Web/Gen-AI Developer."
+            )
+        else:
+            # Long version
+            return (
+                "Nandesh Kalashetti is a Full-Stack Web/Gen-AI Developer. You can reach out to him via email at "
+                "nandeshkalshetti1@gmail.com or give him a call at 9420732657. He is located in Samarth Nagar, "
+                "Akkalkot. For more information, you can visit his portfolio at "
+                "nandesh-kalashettiportfilio2386.netlify.app or check out his GitHub profile at "
+                "github.com/Universe7Nandu. He also has a LeetCode profile at leetcode.com/u/Nandesh2386 "
+                "and you can connect with him on LinkedIn at linkedin.com/in/nandesh-kalashetti-333a78250."
+            )
+
+    return None
+
+# ==============================
 #  ASYNC PATCH & APP START
 # ==============================
 nest_asyncio.apply()
@@ -207,38 +239,46 @@ def main():
     user_input = st.chat_input("Type your advanced math query here (e.g., 'Solve x^2=4' or 'Plot x^2 from -2 to 2')")
 
     if user_input and user_input.strip():
+        # Display user's message
         st.session_state["chat_history"].append({"role": "user", "content": user_input})
         with st.chat_message("user"):
             st.markdown(f"<div class='user-bubble'>{user_input}</div>", unsafe_allow_html=True)
 
-        # Attempt to parse a plot command before calling the LLM
-        plot_generated = False
-        plot_figure = None
-        parsed_plot = parse_plot_command(user_input)
-        if parsed_plot:
-            plot_figure = generate_plot(*parsed_plot)  # (expr, x_min, x_max)
-            plot_generated = True
+        # Check if user asked a special query (e.g. who created the chatbot?)
+        special_reply = handle_special_queries(user_input)
+        if special_reply is not None:
+            # We skip the LLM and respond with the special reply
+            assistant_response = special_reply
+        else:
+            # Attempt to parse a plot command before calling the LLM
+            plot_generated = False
+            plot_figure = None
+            parsed_plot = parse_plot_command(user_input)
+            if parsed_plot:
+                plot_figure = generate_plot(*parsed_plot)  # (expr, x_min, x_max)
+                plot_generated = True
 
-        with st.spinner("Processing your request..."):
-            # Build the message list for the LLM including multi-turn context
-            messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-            for entry in st.session_state["chat_history"]:
-                messages.append({"role": entry["role"], "content": entry["content"]})
-            llm = ChatGroq(
-                temperature=0.7,
-                groq_api_key=GROQ_API_KEY,
-                model_name="mixtral-8x7b-32768"
-            )
-            try:
-                response = asyncio.run(llm.ainvoke(messages))
-                assistant_response = response.content
-            except Exception as e:
-                assistant_response = f"Error: {str(e)}"
+            with st.spinner("Processing your request..."):
+                # Build the message list for the LLM including multi-turn context
+                messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+                for entry in st.session_state["chat_history"]:
+                    messages.append({"role": entry["role"], "content": entry["content"]})
+                llm = ChatGroq(
+                    temperature=0.7,
+                    groq_api_key=GROQ_API_KEY,
+                    model_name="mixtral-8x7b-32768"
+                )
+                try:
+                    response = asyncio.run(llm.ainvoke(messages))
+                    assistant_response = response.content
+                except Exception as e:
+                    assistant_response = f"Error: {str(e)}"
 
-        if plot_generated and plot_figure is not None:
-            st.plotly_chart(plot_figure, use_container_width=True)
-            assistant_response += "\n\n(Generated a dynamic Plotly graph based on your request.)"
+            if plot_generated and plot_figure is not None:
+                st.plotly_chart(plot_figure, use_container_width=True)
+                assistant_response += "\n\n(Generated a dynamic Plotly graph based on your request.)"
 
+        # Display final assistant response
         st.session_state["chat_history"].append({"role": "assistant", "content": assistant_response})
         with st.chat_message("assistant"):
             st.markdown(f"<div class='assistant-bubble'>{assistant_response}</div>", unsafe_allow_html=True)
