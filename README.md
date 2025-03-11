@@ -1,7 +1,7 @@
 
 # 🤖 Generative AI Chatbot by Nandesh Kalashetti
 
-[![Watch Demo](chatbot.png)](https://youtu.be/V0ffoYtm_Uk)
+[![Watch Demo](chatbot.png)](https://youtu.be/Na4wEELdA4w)
 
 ## Overview
 
@@ -78,7 +78,7 @@ Welcome to the **Generative AI Chatbot** repository! This project is a personal 
 
 Watch the demo video on YouTube to see the chatbot in action:
 
-[![Watch Demo](chatbot.png)](https://youtu.be/V0ffoYtm_Uk)
+[![Watch Demo](chatbot.png)](https://youtu.be/Na4wEELdA4w)
 
 ## How to Use
 
